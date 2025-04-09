@@ -46,13 +46,13 @@
             const clipboardKey = clipboardList.value;
             try {
                 const response = await fetch(`/api/content?key=${clipboardKey}`, { cache: 'no-store' });
-                debug.innerText = `加载状态: ${response.status} ${response.statusText}`;
-                if (!response.ok) throw new Error(`加载失败: ${response.statusText}`);
+                if (!response.ok) throw new Error('加载失败');
                 const text = await response.text();
                 document.getElementById('content').value = text || '';
+                debug.innerText = '成功';
             } catch (error) {
                 console.error('加载内容失败:', error);
-                debug.innerText += `\n错误: ${error.message}`;
+                debug.innerText = '失败';
                 document.getElementById('content').value = '加载失败，请检查网络或刷新';
             }
         }
@@ -67,14 +67,12 @@
                     body: content,
                     headers: { 'Content-Type': 'text/plain' }
                 });
-                debug.innerText = `保存状态: ${response.status} ${response.statusText}`;
-                if (!response.ok) throw new Error(`保存失败: ${response.statusText}`);
-                const result = await response.text();
-                debug.innerText += `\n结果: ${result}`;
+                if (!response.ok) throw new Error('保存失败');
+                debug.innerText = '成功';
                 alert('保存成功');
             } catch (error) {
                 console.error('保存内容失败:', error);
-                debug.innerText += `\n错误: ${error.message}`;
+                debug.innerText = '失败';
                 alert('保存内容失败，请重试');
             }
             await loadContent(); // 保存后重新加载
@@ -85,6 +83,7 @@
             const content = document.getElementById('content').value;
             if (!content) {
                 alert('内容为空，无法下载');
+                debug.innerText = '失败';
                 return;
             }
             const clipboardKey = clipboardList.value;
@@ -93,12 +92,12 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${clipboardKey}.${ext}`; // 文件名包含自定义后缀
+            a.download = `${clipboardKey}.${ext}`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
-            debug.innerText += `\n下载完成 (后缀: ${ext})`;
+            debug.innerText = '成功';
         }
 
         // 添加新剪贴板并排序
@@ -118,13 +117,14 @@
 
             clipboardList.value = newKey; // 切换到新剪贴板
             document.getElementById('content').value = ''; // 清空内容
-            debug.innerText = `已添加: ${newKey}`;
+            debug.innerText = '成功';
         }
 
         // 删除当前剪贴板
         async function deleteClipboard() {
             if (clipboardList.options.length <= 1) {
                 alert('至少保留一个剪贴板');
+                debug.innerText = '失败';
                 return;
             }
             const clipboardKey = clipboardList.value;
@@ -136,10 +136,10 @@
                 clipboardList.remove(clipboardList.selectedIndex);
                 clipboardList.value = clipboardList.options[0].value; // 切换到第一个剪贴板
                 await loadContent();
-                debug.innerText = `已删除: ${clipboardKey}`;
+                debug.innerText = '成功';
             } catch (error) {
                 console.error('删除失败:', error);
-                debug.innerText += `\n错误: ${error.message}`;
+                debug.innerText = '失败';
             }
         }
 
@@ -156,12 +156,14 @@
             const newName = renameInput.value.trim();
             if (!newName) {
                 alert('名称不能为空');
+                debug.innerText = '失败';
                 return;
             }
             const oldKey = clipboardList.value;
             const existingKeys = Array.from(clipboardList.options).map(option => option.value);
             if (existingKeys.includes(newName) && newName !== oldKey) {
                 alert('名称已存在');
+                debug.innerText = '失败';
                 return;
             }
 
@@ -177,7 +179,7 @@
                     await fetch(`/api/content?key=${oldKey}`, { method: 'DELETE' });
                 } catch (error) {
                     console.error('重命名失败:', error);
-                    debug.innerText += `\n错误: ${error.message}`;
+                    debug.innerText = '失败';
                     return;
                 }
             }
@@ -193,7 +195,7 @@
             clipboardList.value = newName;
             renameInput.style.display = 'none';
             renameBtn.style.display = 'none';
-            debug.innerText = `已重命名: ${oldKey} -> ${newName}`;
+            debug.innerText = '成功';
         }
 
         // 按首字母排序剪贴板列表
