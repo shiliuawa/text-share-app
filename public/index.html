@@ -91,7 +91,7 @@
             debug.innerText += '\n下载完成';
         }
 
-        // 添加新剪贴板
+        // 添加新剪贴板并排序
         function addClipboard() {
             const existingNumbers = Array.from(clipboardList.options).map(option => 
                 parseInt(option.value.replace('clipboard-', ''))
@@ -105,7 +105,18 @@
             newOption.value = newKey;
             newOption.text = `剪贴板 ${newNumber}`;
             clipboardList.appendChild(newOption);
-            clipboardList.value = newKey; // 自动切换到新剪贴板
+
+            // 按编号排序
+            const options = Array.from(clipboardList.options);
+            options.sort((a, b) => 
+                parseInt(a.value.replace('clipboard-', '')) - parseInt(b.value.replace('clipboard-', ''))
+            );
+            while (clipboardList.firstChild) {
+                clipboardList.removeChild(clipboardList.firstChild);
+            }
+            options.forEach(option => clipboardList.appendChild(option));
+
+            clipboardList.value = newKey; // 切换到新剪贴板
             document.getElementById('content').value = ''; // 清空内容
             debug.innerText = `已添加: ${newKey}`;
         }
