@@ -18,19 +18,35 @@
     <script>
         // 加载内容
         async function loadContent() {
-            const response = await fetch('/api/content');
-            const text = await response.text();
-            document.getElementById('content').value = text || '';
+            try {
+                const response = await fetch('/api/content');
+                if (!response.ok) throw new Error('加载失败');
+                const text = await response.text();
+                document.getElementById('content').value = text || '';
+            } catch (error) {
+                console.error('加载内容失败:', error);
+                alert('加载内容失败，请刷新重试');
+            }
         }
 
         // 保存内容
         async function saveContent() {
             const content = document.getElementById('content').value;
-            await fetch('/api/content', {
-                method: 'POST',
-                body: content
-            });
-            alert('保存成功！');
+            try {
+                const response = await fetch('/api/content', {
+                    method: 'POST',
+                    body: content,
+                    headers: { 'Content-Type': 'text/plain' }
+                });
+                if (!response.ok) throw new Error('保存失败');
+                const result = await response.text();
+                alert(result); // 显示“保存成功”或错误信息
+            } catch (error) {
+                console.error('保存内容失败:', error);
+                alert('保存内容失败，请重试');
+            }
+            // 保存后重新加载，确保显示最新内容
+            await loadContent();
         }
 
         // 页面加载时获取内容
