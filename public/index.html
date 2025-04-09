@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>剪贴板</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <h1>剪贴板</h1>
+    <textarea id="content" rows="10" cols="50" placeholder="在这里编辑内容..."></textarea>
+    <button onclick="saveContent()">保存</button>
+    <script>
+        // 获取初始内容
+        async function loadContent() {
+            const response = await fetch('/api/content');
+            const data = await response.text();
+            document.getElementById('content').value = data;
+        }
+
+        // 保存内容
+        async function saveContent() {
+            const content = document.getElementById('content').value;
+            await fetch('/api/content', {
+                method: 'POST',
+                body: content
+            });
+            alert('内容已保存！');
+        }
+
+        // 页面加载时获取内容
+        window.onload = loadContent;
+    </script>
+</body>
+</html>
