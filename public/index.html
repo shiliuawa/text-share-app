@@ -31,7 +31,6 @@
     <script>
         const debug = document.getElementById('debug');
         const clipboardList = document.getElementById('clipboardList');
-        let clipboardCount = 1; // 初始剪贴板数量
 
         // 加载当前选中的剪贴板内容
         async function loadContent() {
@@ -94,11 +93,17 @@
 
         // 添加新剪贴板
         function addClipboard() {
-            clipboardCount++;
+            const existingNumbers = Array.from(clipboardList.options).map(option => 
+                parseInt(option.value.replace('clipboard-', ''))
+            );
+            let newNumber = 1;
+            while (existingNumbers.includes(newNumber)) {
+                newNumber++;
+            }
+            const newKey = `clipboard-${newNumber}`;
             const newOption = document.createElement('option');
-            const newKey = `clipboard-${clipboardCount}`;
             newOption.value = newKey;
-            newOption.text = `剪贴板 ${clipboardCount}`;
+            newOption.text = `剪贴板 ${newNumber}`;
             clipboardList.appendChild(newOption);
             clipboardList.value = newKey; // 自动切换到新剪贴板
             document.getElementById('content').value = ''; // 清空内容
@@ -107,7 +112,7 @@
 
         // 删除当前剪贴板
         async function deleteClipboard() {
-            if (clipboardCount <= 1) {
+            if (clipboardList.options.length <= 1) {
                 alert('至少保留一个剪贴板');
                 return;
             }
@@ -118,7 +123,6 @@
                 });
                 if (!response.ok) throw new Error('删除失败');
                 clipboardList.remove(clipboardList.selectedIndex);
-                clipboardCount--;
                 clipboardList.value = clipboardList.options[0].value; // 切换到第一个剪贴板
                 await loadContent();
                 debug.innerText = `已删除: ${clipboardKey}`;
