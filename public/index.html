@@ -11,16 +11,20 @@
         button { margin-right: 10px; }
         #clipboardList { margin: 10px 0; }
         select { padding: 5px; }
+        #renameInput { margin-left: 10px; padding: 5px; }
     </style>
 </head>
 <body>
     <h1>多剪贴板</h1>
     <div>
         <select id="clipboardList" onchange="loadContent()">
-            <option value="clipboard-1">剪贴板 1</option>
+            <option value="default">默认剪贴板</option>
         </select>
         <button onclick="addClipboard()">添加剪贴板</button>
         <button onclick="deleteClipboard()">删除当前剪贴板</button>
+        <input id="renameInput" placeholder="输入新名称" style="display: none;">
+        <button onclick="renameClipboard()" id="renameBtn" style="display: none;">确认重命名</button>
+        <button onclick="showRenameInput()">重命名</button>
     </div>
     <textarea id="content" placeholder="在这里输入内容..."></textarea>
     <br>
@@ -31,6 +35,8 @@
     <script>
         const debug = document.getElementById('debug');
         const clipboardList = document.getElementById('clipboardList');
+        const renameInput = document.getElementById('renameInput');
+        const renameBtn = document.getElementById('renameBtn');
 
         // 加载当前选中的剪贴板内容
         async function loadContent() {
@@ -93,28 +99,18 @@
 
         // 添加新剪贴板并排序
         function addClipboard() {
-            const existingNumbers = Array.from(clipboardList.options).map(option => 
-                parseInt(option.value.replace('clipboard-', ''))
-            );
-            let newNumber = 1;
-            while (existingNumbers.includes(newNumber)) {
-                newNumber++;
+            const existingKeys = Array.from(clipboardList.options).map(option => option.value);
+            let newKey = `clipboard-${existingKeys.length + 1}`;
+            while (existingKeys.includes(newKey)) {
+                newKey = `clipboard-${existingKeys.length + 1}-${Math.random().toString(36).substr(2, 5)}`;
             }
-            const newKey = `clipboard-${newNumber}`;
             const newOption = document.createElement('option');
             newOption.value = newKey;
-            newOption.text = `剪贴板 ${newNumber}`;
+            newOption.text = newKey;
             clipboardList.appendChild(newOption);
 
-            // 按编号排序
-            const options = Array.from(clipboardList.options);
-            options.sort((a, b) => 
-                parseInt(a.value.replace('clipboard-', '')) - parseInt(b.value.replace('clipboard-', ''))
-            );
-            while (clipboardList.firstChild) {
-                clipboardList.removeChild(clipboardList.firstChild);
-            }
-            options.forEach(option => clipboardList.appendChild(option));
+            // 按首字母排序
+            sortClipboardList();
 
             clipboardList.value = newKey; // 切换到新剪贴板
             document.getElementById('content').value = ''; // 清空内容
@@ -141,6 +137,69 @@
                 console.error('删除失败:', error);
                 debug.innerText += `\n错误: ${error.message}`;
             }
+        }
+
+        // 显示重命名输入框
+        function showRenameInput() {
+            renameInput.style.display = 'inline';
+            renameBtn.style.display = 'inline';
+            renameInput.value = clipboardList.options[clipboardList.selectedIndex].text;
+            renameInput.focus();
+        }
+
+        // 重命名剪贴板
+        async function renameClipboard() {
+            const newName = renameInput.value.trim();
+            if (!newName) {
+                alert('名称不能为空');
+                return;
+            }
+            const oldKey = clipboardList.value;
+            const existingKeys = Array.from(clipboardList.options).map(option => option.value);
+            if (existingKeys.includes(newName) && newName !== oldKey) {
+                alert('名称已存在');
+                return;
+            }
+
+            // 如果名称改变，复制内容到新键并删除旧键
+            if (newName !== oldKey) {
+                try {
+                    const content = document.getElementById('content').value;
+                    await fetch(`/api/content?key=${newName}`, {
+                        method: 'POST',
+                        body: content,
+                        headers: { 'Content-Type': 'text/plain' }
+                    });
+                    await fetch(`/api/content?key=${oldKey}`, { method: 'DELETE' });
+                } catch (error) {
+                    console.error('重命名失败:', error);
+                    debug.innerText += `\n错误: ${error.message}`;
+                    return;
+                }
+            }
+
+            // 更新选项
+            const selectedOption = clipboardList.options[clipboardList.selectedIndex];
+            selectedOption.value = newName;
+            selectedOption.text = newName;
+
+            // 按首字母排序
+            sortClipboardList();
+
+            clipboardList.value = newName;
+            renameInput.style.display = 'none';
+            renameBtn.style.display = 'none';
+            debug.innerText = `已重命名: ${oldKey} -> ${newName}`;
+        }
+
+        // 按首字母排序剪贴板列表
+        function sortClipboardList() {
+            const options = Array.from(clipboardList.options);
+            options.sort((a, b) => a.value.localeCompare(b.value, 'zh', { numeric: true }));
+            while (clipboardList.firstChild) {
+                clipboardList.removeChild(clipboardList.firstChild);
+            }
+            options.forEach(option => clipboardList.appendChild(option));
         }
 
         // 页面加载时获取初始内容
