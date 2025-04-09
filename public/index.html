@@ -12,6 +12,7 @@
         #clipboardList { margin: 10px 0; }
         select { padding: 5px; }
         #renameInput { margin-left: 10px; padding: 5px; }
+        #downloadExt { width: 60px; padding: 5px; margin-right: 10px; }
     </style>
 </head>
 <body>
@@ -29,6 +30,7 @@
     <textarea id="content" placeholder="在这里输入内容..."></textarea>
     <br>
     <button onclick="saveContent()">保存</button>
+    <input id="downloadExt" value="txt" placeholder="后缀名">
     <button onclick="downloadContent()">下载</button>
     <div id="debug"></div>
 
@@ -37,6 +39,7 @@
         const clipboardList = document.getElementById('clipboardList');
         const renameInput = document.getElementById('renameInput');
         const renameBtn = document.getElementById('renameBtn');
+        const downloadExt = document.getElementById('downloadExt');
 
         // 加载当前选中的剪贴板内容
         async function loadContent() {
@@ -85,16 +88,17 @@
                 return;
             }
             const clipboardKey = clipboardList.value;
+            const ext = downloadExt.value.trim() || 'txt'; // 默认 txt
             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${clipboardKey}.txt`; // 文件名基于剪贴板键
+            a.download = `${clipboardKey}.${ext}`; // 文件名包含自定义后缀
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
-            debug.innerText += '\n下载完成';
+            debug.innerText += `\n下载完成 (后缀: ${ext})`;
         }
 
         // 添加新剪贴板并排序
