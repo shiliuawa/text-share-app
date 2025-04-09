@@ -7,6 +7,7 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         #content { width: 100%; height: 300px; font-size: 16px; }
+        #debug { color: red; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -14,18 +15,23 @@
     <textarea id="content" placeholder="在这里输入内容..."></textarea>
     <br>
     <button onclick="saveContent()">保存</button>
+    <div id="debug"></div>
 
     <script>
+        const debug = document.getElementById('debug');
+
         // 加载内容
         async function loadContent() {
             try {
-                const response = await fetch('/api/content');
-                if (!response.ok) throw new Error('加载失败');
+                const response = await fetch('/api/content', { cache: 'no-store' });
+                debug.innerText = `加载状态: ${response.status} ${response.statusText}`;
+                if (!response.ok) throw new Error(`加载失败: ${response.statusText}`);
                 const text = await response.text();
                 document.getElementById('content').value = text || '';
             } catch (error) {
                 console.error('加载内容失败:', error);
-                alert('加载内容失败，请刷新重试');
+                debug.innerText += `\n错误: ${error.message}`;
+                document.getElementById('content').value = '加载失败，请检查网络或刷新';
             }
         }
 
@@ -38,15 +44,17 @@
                     body: content,
                     headers: { 'Content-Type': 'text/plain' }
                 });
-                if (!response.ok) throw new Error('保存失败');
+                debug.innerText = `保存状态: ${response.status} ${response.statusText}`;
+                if (!response.ok) throw new Error(`保存失败: ${response.statusText}`);
                 const result = await response.text();
-                alert(result); // 显示“保存成功”或错误信息
+                debug.innerText += `\n结果: ${result}`;
+                alert('保存成功');
             } catch (error) {
                 console.error('保存内容失败:', error);
+                debug.innerText += `\n错误: ${error.message}`;
                 alert('保存内容失败，请重试');
             }
-            // 保存后重新加载，确保显示最新内容
-            await loadContent();
+            await loadContent(); // 保存后重新加载
         }
 
         // 页面加载时获取内容
