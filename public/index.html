@@ -3,16 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>剪贴板</title>
+    <title>多剪贴板</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         #content { width: 100%; height: 300px; font-size: 16px; }
         #debug { color: red; margin-top: 10px; }
-        button { margin-right: 10px; } /* 为按钮添加间距 */
+        button { margin-right: 10px; }
+        #clipboardList { margin: 10px 0; }
+        select { padding: 5px; }
     </style>
 </head>
 <body>
-    <h1>剪贴板</h1>
+    <h1>多剪贴板</h1>
+    <div>
+        <select id="clipboardList" onchange="loadContent()">
+            <option value="clipboard-1">剪贴板 1</option>
+        </select>
+        <button onclick="addClipboard()">添加剪贴板</button>
+        <button onclick="deleteClipboard()">删除当前剪贴板</button>
+    </div>
     <textarea id="content" placeholder="在这里输入内容..."></textarea>
     <br>
     <button onclick="saveContent()">保存</button>
@@ -21,11 +30,14 @@
 
     <script>
         const debug = document.getElementById('debug');
+        const clipboardList = document.getElementById('clipboardList');
+        let clipboardCount = 1; // 初始剪贴板数量
 
-        // 加载内容
+        // 加载当前选中的剪贴板内容
         async function loadContent() {
+            const clipboardKey = clipboardList.value;
             try {
-                const response = await fetch('/api/content', { cache: 'no-store' });
+                const response = await fetch(`/api/content?key=${clipboardKey}`, { cache: 'no-store' });
                 debug.innerText = `加载状态: ${response.status} ${response.statusText}`;
                 if (!response.ok) throw new Error(`加载失败: ${response.statusText}`);
                 const text = await response.text();
@@ -37,11 +49,12 @@
             }
         }
 
-        // 保存内容到服务器
+        // 保存内容到当前选中的剪贴板
         async function saveContent() {
+            const clipboardKey = clipboardList.value;
             const content = document.getElementById('content').value;
             try {
-                const response = await fetch('/api/content', {
+                const response = await fetch(`/api/content?key=${clipboardKey}`, {
                     method: 'POST',
                     body: content,
                     headers: { 'Content-Type': 'text/plain' }
@@ -59,18 +72,19 @@
             await loadContent(); // 保存后重新加载
         }
 
-        // 下载内容到本地
+        // 下载当前剪贴板内容
         function downloadContent() {
             const content = document.getElementById('content').value;
             if (!content) {
                 alert('内容为空，无法下载');
                 return;
             }
+            const clipboardKey = clipboardList.value;
             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'clipboard.txt'; // 默认文件名
+            a.download = `${clipboardKey}.txt`; // 文件名基于剪贴板键
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -78,7 +92,43 @@
             debug.innerText += '\n下载完成';
         }
 
-        // 页面加载时获取内容
+        // 添加新剪贴板
+        function addClipboard() {
+            clipboardCount++;
+            const newOption = document.createElement('option');
+            const newKey = `clipboard-${clipboardCount}`;
+            newOption.value = newKey;
+            newOption.text = `剪贴板 ${clipboardCount}`;
+            clipboardList.appendChild(newOption);
+            clipboardList.value = newKey; // 自动切换到新剪贴板
+            document.getElementById('content').value = ''; // 清空内容
+            debug.innerText = `已添加: ${newKey}`;
+        }
+
+        // 删除当前剪贴板
+        async function deleteClipboard() {
+            if (clipboardCount <= 1) {
+                alert('至少保留一个剪贴板');
+                return;
+            }
+            const clipboardKey = clipboardList.value;
+            try {
+                const response = await fetch(`/api/content?key=${clipboardKey}`, {
+                    method: 'DELETE'
+                });
+                if (!response.ok) throw new Error('删除失败');
+                clipboardList.remove(clipboardList.selectedIndex);
+                clipboardCount--;
+                clipboardList.value = clipboardList.options[0].value; // 切换到第一个剪贴板
+                await loadContent();
+                debug.innerText = `已删除: ${clipboardKey}`;
+            } catch (error) {
+                console.error('删除失败:', error);
+                debug.innerText += `\n错误: ${error.message}`;
+            }
+        }
+
+        // 页面加载时获取初始内容
         window.onload = loadContent;
     </script>
 </body>
