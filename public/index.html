@@ -4,18 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>剪贴板</title>
-    <link rel="stylesheet" href="/style.css">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #content { width: 100%; height: 300px; font-size: 16px; }
+    </style>
 </head>
 <body>
     <h1>剪贴板</h1>
-    <textarea id="content" rows="10" cols="50" placeholder="在这里编辑内容..."></textarea>
+    <textarea id="content" placeholder="在这里输入内容..."></textarea>
+    <br>
     <button onclick="saveContent()">保存</button>
+
     <script>
-        // 获取初始内容
+        // 加载内容
         async function loadContent() {
             const response = await fetch('/api/content');
-            const data = await response.text();
-            document.getElementById('content').value = data;
+            const text = await response.text();
+            document.getElementById('content').value = text || '';
         }
 
         // 保存内容
@@ -25,7 +30,7 @@
                 method: 'POST',
                 body: content
             });
-            alert('内容已保存！');
+            alert('保存成功！');
         }
 
         // 页面加载时获取内容
