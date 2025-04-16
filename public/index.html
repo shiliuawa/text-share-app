@@ -16,6 +16,7 @@
         #authContainer { text-align: center; }
         #mainContainer { display: none; }
         #passwordInput { padding: 5px; margin: 10px; }
+        #fileInput { display: none; }
     </style>
 </head>
 <body>
@@ -42,6 +43,8 @@
         <button onclick="saveContent()">保存</button>
         <input id="downloadExt" value="txt" placeholder="后缀名">
         <button onclick="downloadContent()">下载</button>
+        <input id="fileInput" type="file" accept=".txt,.md,.json" onchange="uploadFile()">
+        <button onclick="document.getElementById('fileInput').click()">上传文件</button>
     </div>
 
     <script>
@@ -53,6 +56,7 @@
         const authContainer = document.getElementById('authContainer');
         const mainContainer = document.getElementById('mainContainer');
         const passwordInput = document.getElementById('passwordInput');
+        const fileInput = document.getElementById('fileInput');
 
         // 验证密码
         async function verifyPassword() {
@@ -67,7 +71,7 @@
                 authContainer.style.display = 'none';
                 mainContainer.style.display = 'block';
                 debug.innerText = '成功';
-                loadContent(); // 验证成功后加载内容
+                loadContent();
             } catch (error) {
                 console.error('密码验证失败:', error);
                 debug.innerText = '失败';
@@ -109,7 +113,7 @@
                 debug.innerText = '失败';
                 alert('保存内容失败，请重试');
             }
-            await loadContent(); // 保存后重新加载
+            await loadContent();
         }
 
         // 下载当前剪贴板内容
@@ -134,6 +138,33 @@
             debug.innerText = '成功';
         }
 
+        // 上传文件
+        async function uploadFile() {
+            const file = fileInput.files[0];
+            if (!file) {
+                debug.innerText = '失败';
+                alert('未选择文件');
+                return;
+            }
+            try {
+                const reader = new FileReader();
+                reader.onload = async function (e) {
+                    const content = e.target.result;
+                    document.getElementById('content').value = content;
+                    await saveContent(); // 自动保存到当前剪贴板
+                };
+                reader.onerror = function () {
+                    debug.innerText = '失败';
+                    alert('读取文件失败');
+                };
+                reader.readAsText(file);
+            } catch (error) {
+                console.error('上传文件失败:', error);
+                debug.innerText = '失败';
+                alert('上传文件失败，请重试');
+            }
+        }
+
         // 添加新剪贴板并排序
         function addClipboard() {
             const existingKeys = Array.from(clipboardList.options).map(option => option.value);
@@ -146,7 +177,6 @@
             newOption.text = newKey;
             clipboardList.appendChild(newOption);
 
-            // 按首字母排序
             sortClipboardList();
 
             clipboardList.value = newKey;
