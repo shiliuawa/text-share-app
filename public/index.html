@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多剪贴板</title>
+    <title>在线剪贴板</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         #content { width: 100%; height: 300px; font-size: 16px; }
@@ -12,10 +12,11 @@
         #clipboardList { margin: 10px 0; }
         select { padding: 5px; }
         #renameInput { margin-left: 10px; padding: 5px; }
+        #downloadExt { width: 60px; padding: 5px; margin-right: 10px; }
         #authContainer { text-align: center; }
         #mainContainer { display: none; }
         #passwordInput { padding: 5px; margin: 10px; }
-        #fileInput { display: none; }
+        #fileInput { margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -26,7 +27,7 @@
         <div id="debug"></div>
     </div>
     <div id="mainContainer">
-        <h1>多剪贴板</h1>
+        <h1>在线剪贴板</h1>
         <div>
             <select id="clipboardList" onchange="loadContent()">
                 <option value="default">默认剪贴板</option>
@@ -37,12 +38,12 @@
             <button onclick="renameClipboard()" id="renameBtn" style="display: none;">确认重命名</button>
             <button onclick="showRenameInput()">重命名</button>
         </div>
+        <input type="file" id="fileInput" accept="text/*">
         <textarea id="content" placeholder="在这里输入内容..."></textarea>
         <br>
         <button onclick="saveContent()">保存</button>
+        <input id="downloadExt" value="txt" placeholder="后缀名">
         <button onclick="downloadContent()">下载</button>
-        <input id="fileInput" type="file" accept=".txt,.md,.json" onchange="uploadFile()">
-        <button onclick="document.getElementById('fileInput').click()">上传文件</button>
     </div>
 
     <script>
@@ -50,6 +51,7 @@
         const clipboardList = document.getElementById('clipboardList');
         const renameInput = document.getElementById('renameInput');
         const renameBtn = document.getElementById('renameBtn');
+        const downloadExt = document.getElementById('downloadExt');
         const authContainer = document.getElementById('authContainer');
         const mainContainer = document.getElementById('mainContainer');
         const passwordInput = document.getElementById('passwordInput');
@@ -122,11 +124,12 @@
                 return;
             }
             const clipboardKey = clipboardList.value;
+            const ext = downloadExt.value.trim() || 'txt';
             const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = clipboardKey; // 直接使用剪贴板名（含扩展名）
+            a.download = `${clipboardKey}.${ext}`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -134,7 +137,7 @@
             debug.innerText = '成功';
         }
 
-        // 添加新剪贴板
+        // 添加新剪贴板并排序
         function addClipboard() {
             const existingKeys = Array.from(clipboardList.options).map(option => option.value);
             let newKey = `clipboard-${existingKeys.length + 1}`;
@@ -151,65 +154,6 @@
             clipboardList.value = newKey;
             document.getElementById('content').value = '';
             debug.innerText = '成功';
-        }
-
-        // 上传文件到新剪贴板
-        async function uploadFile() {
-            const file = fileInput.files[0];
-            if (!file) {
-                debug.innerText = '失败';
-                alert('未选择文件');
-                return;
-            }
-            try {
-                const fileName = file.name; // 包含扩展名，例如 note.txt
-                const existingKeys = Array.from(clipboardList.options).map(option => option.value);
-                let newKey = fileName;
-                let suffix = 1;
-                while (existingKeys.includes(newKey)) {
-                    newKey = `${fileName.split('.')[0]}-${suffix}.${fileName.split('.').pop()}`;
-                    suffix++;
-                }
-
-                const reader = new FileReader();
-                reader.onload = async function (e) {
-                    const content = e.target.result;
-                    document.getElementById('content').value = content;
-
-                    // 创建新剪贴板
-                    const newOption = document.createElement('option');
-                    newOption.value = newKey;
-                    newOption.text = newKey;
-                    clipboardList.appendChild(newOption);
-                    sortClipboardList();
-                    clipboardList.value = newKey;
-
-                    // 保存内容
-                    try {
-                        const response = await fetch(`/api/content?key=${newKey}`, {
-                            method: 'POST',
-                            body: content,
-                            headers: { 'Content-Type': 'text/plain' }
-                        });
-                        if (!response.ok) throw new Error('保存失败');
-                        debug.innerText = '成功';
-                        alert('上传并保存成功');
-                    } catch (error) {
-                        console.error('保存失败:', error);
-                        debug.innerText = '失败';
-                        alert('保存失败，请重试');
-                    }
-                };
-                reader.onerror = function () {
-                    debug.innerText = '失败';
-                    alert('读取文件失败');
-                };
-                reader.readAsText(file);
-            } catch (error) {
-                console.error('上传文件失败:', error);
-                debug.innerText = '失败';
-                alert('上传文件失败，请重试');
-            }
         }
 
         // 删除当前剪贴板
@@ -296,6 +240,55 @@
             }
             options.forEach(option => clipboardList.appendChild(option));
         }
+
+        // 文件上传
+        fileInput.addEventListener('change', async function () {
+            const file = fileInput.files[0];
+            if (!file) {
+                debug.innerText = '失败';
+                return;
+            }
+
+            const fileName = file.name.split('.').slice(0, -1).join('.') || 'uploaded-file';
+            const fileExt = file.name.split('.').pop() || 'txt';
+            const existingKeys = Array.from(clipboardList.options).map(option => option.value);
+            let newKey = fileName;
+            let suffix = 1;
+            while (existingKeys.includes(newKey)) {
+                newKey = `${fileName}-${suffix}`;
+                suffix++;
+            }
+
+            try {
+                const content = await file.text();
+                const response = await fetch(`/api/content?key=${newKey}`, {
+                    method: 'POST',
+                    body: content,
+                    headers: { 'Content-Type': 'text/plain' }
+                });
+                if (!response.ok) throw new Error('上传失败');
+
+                const newOption = document.createElement('option');
+                newOption.value = newKey;
+                newOption.text = newKey;
+                clipboardList.appendChild(newOption);
+
+                sortClipboardList();
+
+                clipboardList.value = newKey;
+                downloadExt.value = fileExt;
+                document.getElementById('content').value = content;
+                debug.innerText = '成功';
+            } catch (error) {
+                console.error('上传失败:', error);
+                debug.innerText = '失败';
+                alert('上传失败，请重试');
+            }
+            fileInput.value = '';
+        });
+
+        // 页面加载时获取初始内容
+        window.onload = () => authContainer.style.display = 'block';
     </script>
 </body>
 </html>
