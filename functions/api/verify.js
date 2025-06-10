@@ -1,9 +1,12 @@
+import { createHash } from 'crypto';
+
 export async function onRequest(context) {
     const { request, env } = context;
-    const PASSWORD = env.CLIPBOARD_PASSWORD;
+    const HASHED_PASSWORD = env.HASHED_PASSWORD;
+    const AUTH_TOKEN = env.AUTH_TOKEN;
 
-    if (!PASSWORD) {
-        return new Response('服务器未配置密码', { status: 500 });
+    if (!HASHED_PASSWORD || !AUTH_TOKEN) {
+        return new Response('服务器未配置密码或令牌', { status: 500 });
     }
 
     if (request.method !== 'POST') {
@@ -12,8 +15,12 @@ export async function onRequest(context) {
 
     try {
         const { password } = await request.json();
-        if (password === PASSWORD) {
-            return new Response('验证成功', { status: 200 });
+        const hashedInput = createHash('sha256').update(password).digest('hex');
+        if (hashedInput === HASHED_PASSWORD) {
+            return new Response(JSON.stringify({ token: AUTH_TOKEN }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
         } else {
             return new Response('密码错误', { status: 401 });
         }
