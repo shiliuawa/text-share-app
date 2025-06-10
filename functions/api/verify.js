@@ -1,6 +1,6 @@
 export async function onRequest(context) {
     const { request, env } = context;
-    const PASSWORD = env.CLIPBOARD_PASSWORD; // 从环境变量读取密码
+    const PASSWORD = env.CLIPBOARD_PASSWORD;
 
     if (!PASSWORD) {
         return new Response('服务器未配置密码', { status: 500 });

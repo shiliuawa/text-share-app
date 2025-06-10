@@ -2,7 +2,7 @@ export async function onRequest(context) {
     const { request, env } = context;
     const kv = env.CLIPBOARD_KV;
     const url = new URL(request.url);
-    const key = url.searchParams.get('key') || 'clipboard-1'; // 默认键
+    const key = url.searchParams.get('key') || 'default';
 
     if (!kv) {
         return new Response('错误: KV 命名空间未绑定', { status: 500 });
