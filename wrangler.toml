@@ -6,3 +6,7 @@ pages_build_output_dir = "public"
 kv_namespaces = [
   { binding = "CLIPBOARD_KV", id = "57ff38517856492195cc72ece3219cf2" }
 ]
+
+[vars]
+HASHED_PASSWORD = "29776d9af3bc05366eab5ec1b4e95a9b289a25f18a236e408d249c86f8e176f8"
+AUTH_TOKEN = "08f723fe-921c-4260-8e81-4e7a60ab3a44"
