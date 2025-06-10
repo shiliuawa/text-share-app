@@ -1,7 +1,7 @@
 name = "clipboard-app"
 compatibility_date = "2025-04-09"
+compatibility_flags = ["nodejs_compat"]
 
-# KV 命名空间绑定
 [kv_namespaces]
 binding = "CLIPBOARD_KV"
 id = "57ff38517856492195cc72ece3219cf2"
