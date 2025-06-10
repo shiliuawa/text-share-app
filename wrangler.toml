@@ -1,8 +1,8 @@
 name = "clipboard-app"
 compatibility_date = "2025-04-09"
-compatibility_flags = ["nodejs_compat"] # 启用 Node.js 兼容性
-pages_build_output_dir = "public" # 指定 Pages 构建输出目录
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "public"
 
-[kv_namespaces]
-binding = "CLIPBOARD_KV"
-id = "57ff38517856492195cc72ece3219cf2"
+kv_namespaces = [
+  { binding = "CLIPBOARD_KV", id = "57ff38517856492195cc72ece3219cf2" }
+]
