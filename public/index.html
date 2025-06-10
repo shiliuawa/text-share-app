@@ -114,7 +114,6 @@
             document.getElementById('content').placeholder = lang === 'zh' ? '在这里输入内容...' : 'Enter content here...';
         }
 
-        // 验证密码
         async function verifyPassword() {
             mainContainer.classList.add('loading');
             document.getElementById('loadingIndicator').style.display = 'block';
@@ -145,7 +144,6 @@
             }
         }
 
-        // 初始化剪贴板列表
         async function initClipboardList() {
             try {
                 const response = await fetch('/api/list', {
@@ -175,7 +173,6 @@
             }
         }
 
-        // 加载当前选中的剪贴板内容
         async function loadContent() {
             const clipboardKey = clipboardList.value;
             if (clipboardKey === lastKey) {
@@ -210,7 +207,6 @@
             }
         }
 
-        // 保存内容到当前选中的剪贴板
         async function saveContent() {
             const clipboardKey = clipboardList.value;
             const content = document.getElementById('content').value;
@@ -241,7 +237,6 @@
             await loadContent();
         }
 
-        // 下载当前剪贴板内容
         function downloadContent() {
             const content = document.getElementById('content').value;
             if (!content) {
@@ -265,7 +260,6 @@
             debug.className = 'success';
         }
 
-        // 添加新剪贴板
         async function addClipboard() {
             const existingKeys = Array.from(clipboardList.options).map(option => option.value);
             let newKey = `clipboard-${existingKeys.length + 1}`;
@@ -284,7 +278,6 @@
             await loadContent();
         }
 
-        // 删除当前剪贴板
         async function deleteClipboard() {
             if (clipboardList.options.length <= 1) {
                 alert(translations[localStorage.getItem('language') || 'zh'].delete_clipboard + '至少保留一个');
@@ -314,7 +307,6 @@
             }
         }
 
-        // 显示重命名输入框
         function showRenameInput() {
             renameInput.style.display = 'inline';
             renameBtn.style.display = 'inline';
@@ -322,12 +314,11 @@
             renameInput.focus();
         }
 
-        // 重命名剪贴板
         async function renameClipboard() {
             const newName = renameInput.value.trim();
             if (!newName) {
                 alert(translations[localStorage.getItem('language') || 'zh'].rename + '名称不可为空');
-                debug.innerText = '失敗';
+                debug.innerText = '失败';
                 debug.className = 'failure';
                 return;
             }
@@ -335,7 +326,7 @@
             const existingKeys = Array.from(clipboardList.options).map(option => option.value);
             if (existingKeys.includes(newName) && newName !== oldKey) {
                 alert(translations[localStorage.getItem('language') || 'zh'].rename + '名称已存在');
-                debug.innerText = '失敗';
+                debug.innerText = '失败';
                 debug.className = 'failure';
                 return;
             }
@@ -367,15 +358,14 @@
                 debug.className = 'success';
                 await loadContent();
             } catch (error) {
-                console.error('重命名失敗:', error);
-                debug.innerText = '失敗';
+                console.error('重命名失败:', error);
+                debug.innerText = '失败';
                 debug.className = 'failure';
             } finally {
                 mainContainer.classList.remove('loading');
             }
         }
 
-        // 按首字母排序剪贴板列表
         function sortClipboardList() {
             const options = Array.from(clipboardList.options);
             options.sort((a, b) => a.value.localeCompare(b.value, 'zh', { numeric: true }));
@@ -385,17 +375,16 @@
             options.forEach(option => clipboardList.appendChild(option));
         }
 
-        // 文件上传
         fileInput.addEventListener('change', async function () {
             const file = fileInput.files[0];
             if (!file) {
-                debug.innerText = '失敗';
+                debug.innerText = '失败';
                 debug.className = 'failure';
                 return;
             }
             if (file.size > 10 * 1024 * 1024) {
-                alert(translations[localStorage.getItem('language') || 'zh'].upload + '失敗：文件不得超过10MB');
-                debug.innerText = '失敗';
+                alert(translations[localStorage.getItem('language') || 'zh'].upload + '失败：文件不得超过10MB');
+                debug.innerText = '失败';
                 debug.className = 'failure';
                 return;
             }
@@ -420,7 +409,7 @@
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                if (!response.ok) throw new Error('上传失敗');
+                if (!response.ok) throw new Error('上传失败');
                 const newOption = document.createElement('option');
                 newOption.value = newKey;
                 newOption.text = newKey;
@@ -432,10 +421,10 @@
                 debug.innerText = '成功';
                 debug.className = 'success';
             } catch (error) {
-                console.error('上传失敗:', error);
-                debug.innerText = '失敗';
+                console.error('上传失败:', error);
+                debug.innerText = '失败';
                 debug.className = 'failure';
-                alert(translations[localStorage.getItem('language') || 'zh'].upload + '失敗，请重试');
+                alert(translations[localStorage.getItem('language') || 'zh'].upload + '失败，请重试');
             } finally {
                 mainContainer.classList.remove('loading');
                 document.getElementById('loadingIndicator').style.display = 'none';
@@ -443,13 +432,11 @@
             }
         });
 
-        // 自动保存
         document.getElementById('content').addEventListener('input', () => {
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(saveContent, 5000);
         });
 
-        // 快捷键
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
@@ -460,14 +447,12 @@
             }
         });
 
-        // 更新分享链接
         function updateShareLink(key) {
             const shareLink = document.getElementById('shareLink');
             shareUrl.value = `${window.location.origin}/api/share/${key}`;
             shareLink.style.display = 'block';
         }
 
-        // 复制分享链接
         function copyShareLink() {
             shareUrl.select();
             document.execCommand('copy');
@@ -476,7 +461,6 @@
             debug.className = 'success';
         }
 
-        // 页面加载
         window.onload = () => {
             const savedLang = localStorage.getItem('language') || 'zh';
             document.getElementById('langSelect').value = savedLang;
