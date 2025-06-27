@@ -5,15 +5,7 @@ export async function onRequest(context) {
     const kv = env.CLIPBOARD_KV;
     const url = new URL(request.url);
     const key = url.searchParams.get('key') || 'default';
-    const authHeader = request.headers.get('Authorization');
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return new Response('未授权', { status: 401 });
-    }
-    const token = authHeader.split(' ')[1];
-    if (token !== env.AUTH_TOKEN) {
-        return new Response('无效令牌', { status: 401 });
-    }
+    
 
     if (!kv) {
         return new Response('错误: KV 命名空间未绑定', { status: 500 });

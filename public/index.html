@@ -5,24 +5,157 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="title">在线剪贴板</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        #content { width: 100%; height: 300px; font-size: 16px; }
-        #debug { margin-top: 10px; }
-        #debug.success { color: green; }
-        #debug.failure { color: red; }
-        button { margin-right: 10px; }
-        #clipboardList { margin: 10px 0; }
-        select { padding: 5px; }
-        #renameInput { margin-left: 10px; padding: 5px; }
-        #downloadExt { width: 60px; padding: 5px; margin-right: 10px; }
-        #authContainer { text-align: center; }
-        #mainContainer { display: none; }
-        #passwordInput { padding: 5px; margin: 10px; }
-        #fileInput { margin: 10px 0; }
-        .loading { opacity: 0.5; pointer-events: none; }
-        #loadingIndicator { display: none; color: blue; }
-        #shareLink { margin-top: 10px; display: none; }
-        #langSelect { position: absolute; top: 10px; right: 10px; }
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 20px;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #authContainer, #mainContainer {
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        #content {
+            width: 100%;
+            height: 300px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        .controls, .actions {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button.danger {
+            background-color: var(--danger-color);
+        }
+
+        button.danger:hover {
+            background-color: #c82333;
+        }
+        
+        button.secondary {
+            background-color: var(--secondary-color);
+        }
+        
+        button.secondary:hover {
+            background-color: #5a6268;
+        }
+
+        select, input[type="text"], input[type="password"], input[type="file"] {
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            flex-grow: 1;
+        }
+
+        #clipboardList {
+            max-width: 200px;
+        }
+
+        #renameInput {
+            display: none;
+        }
+
+        #loadingIndicator {
+            display: none;
+            text-align: center;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        #shareLink {
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #shareUrl {
+            flex-grow: 1;
+        }
+
+        #langSelect {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        #debug {
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        #debug.success {
+            color: var(--success-color);
+            background-color: #d4edda;
+        }
+
+        #debug.failure {
+            color: var(--danger-color);
+            background-color: #f8d7da;
+        }
+        
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -30,32 +163,42 @@
         <option value="zh">中文</option>
         <option value="en">English</option>
     </select>
-    <div id="authContainer">
-        <h1 data-i18n="enter_password">请输入密码</h1>
-        <input id="passwordInput" type="password" placeholder="密码">
-        <button onclick="verifyPassword()" data-i18n="submit">提交</button>
-        <div id="debug"></div>
-    </div>
-    <div id="mainContainer">
-        <h1 data-i18n="title">在线剪贴板</h1>
-        <div>
-            <select id="clipboardList" onchange="loadContent()"></select>
-            <button onclick="addClipboard()" data-i18n="add_clipboard">添加剪贴板</button>
-            <button onclick="deleteClipboard()" data-i18n="delete_clipboard">删除当前剪贴板</button>
-            <input id="renameInput" placeholder="输入新名称" style="display: none;">
-            <button onclick="renameClipboard()" id="renameBtn" style="display: none;" data-i18n="confirm_rename">确认重命名</button>
-            <button onclick="showRenameInput()" data-i18n="rename">重命名</button>
+
+    <div class="container">
+        <div id="authContainer">
+            <h1 data-i18n="enter_password">请输入密码</h1>
+            <input id="passwordInput" type="password" placeholder="密码">
+            <button onclick="verifyPassword()" data-i18n="submit">提交</button>
+            <div id="debug"></div>
         </div>
-        <input type="file" id="fileInput" accept="text/*">
-        <textarea id="content" placeholder="在这里输入内容..."></textarea>
-        <br>
-        <button onclick="saveContent()" data-i18n="save">保存</button>
-        <input id="downloadExt" value="txt" placeholder="后缀名">
-        <button onclick="downloadContent()" data-i18n="download">下载</button>
-        <div id="loadingIndicator" data-i18n="loading">加载中...</div>
-        <div id="shareLink">
-            <input id="shareUrl" readonly>
-            <button onclick="copyShareLink()" data-i18n="copy_link">复制链接</button>
+
+        <div id="mainContainer" style="display: none;">
+            <h1 data-i18n="title">在线剪贴板</h1>
+            
+            <div class="controls">
+                <select id="clipboardList" onchange="loadContent()"></select>
+                <button onclick="addClipboard()" data-i18n="add_clipboard">添加剪贴板</button>
+                <button onclick="deleteClipboard()" data-i18n="delete_clipboard" class="danger">删除当前剪贴板</button>
+                <button onclick="showRenameInput()" data-i18n="rename" class="secondary">重命名</button>
+                <input id="renameInput" placeholder="输入新名称">
+                <button onclick="renameClipboard()" id="renameBtn" style="display: none;" data-i18n="confirm_rename">确认重命名</button>
+            </div>
+
+            <input type="file" id="fileInput" accept="text/*">
+            <textarea id="content" placeholder="在这里输入内容..."></textarea>
+            
+            <div class="actions">
+                <button onclick="saveContent()" data-i18n="save">保存</button>
+                <input id="downloadExt" value="txt" placeholder="后缀名" style="width: 80px;">
+                <button onclick="downloadContent()" data-i18n="download">下载</button>
+            </div>
+
+            <div id="loadingIndicator" data-i18n="loading">加载中...</div>
+
+            <div id="shareLink">
+                <input id="shareUrl" readonly>
+                <button onclick="copyShareLink()" data-i18n="copy_link">复制链接</button>
+            </div>
         </div>
     </div>
 
