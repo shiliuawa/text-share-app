@@ -1,3 +1,5 @@
+import { createHash } from 'crypto';
+
 export async function onRequest(context) {
     const { request, env } = context;
     const kv = env.CLIPBOARD_KV;
@@ -20,9 +22,19 @@ export async function onRequest(context) {
     if (request.method === 'GET') {
         try {
             const content = await kv.get(key) || '';
+            const etag = createHash('sha256').update(content).digest('hex');
+            const ifNoneMatch = request.headers.get('If-None-Match');
+
+            if (ifNoneMatch && ifNoneMatch === etag) {
+                return new Response(null, { status: 304 });
+            }
+
             return new Response(content, {
                 status: 200,
-                headers: { 'Content-Type': 'text/plain' }
+                headers: {
+                    'Content-Type': 'text/plain',
+                    'ETag': etag
+                }
             });
         } catch (error) {
             return new Response(`读取 KV 失败: ${error.message}`, { status: 500 });
