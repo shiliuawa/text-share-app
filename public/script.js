@@ -179,7 +179,7 @@ async function saveContent() {
 function downloadContent() {
     const content = document.getElementById('content').value;
     if (!content) {
-        alert(translations[localStorage.getItem('language') || 'zh'].download + '失败：内容为空');
+        showNotification(translations[localStorage.getItem('language') || 'zh'].download + '失败：内容为空', 'error');
         debug.innerText = '失败';
         debug.className = 'failure';
         return;
