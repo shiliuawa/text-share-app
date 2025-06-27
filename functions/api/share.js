@@ -77,12 +77,11 @@ export async function onRequest(context) {
                                         });
                                         if (response.ok) {
                                             const { content } = await response.json();
-                                            document.body.innerHTML = `
-                                                <div class="container">
-                                                    <h1>共享剪贴板内容</h1>
-                                                    <pre style="text-align: left; white-space: pre-wrap; word-break: break-all;">${content.replace(/</g, '&lt;')}</pre>
-                                                </div>
-                                            `;
+                                            document.body.innerHTML = 
+                                                '<div class="container">' +
+                                                '<h1>共享剪贴板内容</h1>' +
+                                                '<pre style="text-align: left; white-space: pre-wrap; word-break: break-all;">' + content.replace(/</g, '&lt;') + '</pre>' +
+                                                '</div>';
                                         } else {
                                             const errorText = await response.text();
                                             messageDiv.textContent = errorText || '密码错误';
