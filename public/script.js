@@ -219,13 +219,14 @@ async function addClipboard() {
 
 async function deleteClipboard() {
     if (clipboardList.options.length <= 1) {
-        alert(translations[localStorage.getItem('language') || 'zh'].delete_clipboard + '至少保留一个');
+        showNotification(translations[localStorage.getItem('language') || 'zh'].delete_clipboard + '至少保留一个', 'error');
         debug.innerText = '失败';
         debug.className = 'failure';
         return;
     }
     const clipboardKey = clipboardList.value;
     mainContainer.classList.add('loading');
+    document.getElementById('loadingIndicator').style.display = 'block';
     try {
         const response = await fetch(`/api/content?key=${clipboardKey}`, {
             method: 'DELETE',
@@ -236,13 +237,39 @@ async function deleteClipboard() {
         clipboardList.value = clipboardList.options[0].value;
         debug.innerText = '成功';
         debug.className = 'success';
+        showNotification('剪贴板删除成功', 'success');
         await loadContent();
     } catch (error) {
         console.error('删除失败:', error);
         debug.innerText = '失败';
         debug.className = 'failure';
+        showNotification('剪贴板删除失败', 'error');
     } finally {
         mainContainer.classList.remove('loading');
+        document.getElementById('loadingIndicator').style.display = 'none';
+    }
+}
+
+async function deleteAllClipboards() {
+    if (!confirm('您确定要删除所有剪贴板吗？此操作不可撤销！')) {
+        return;
+    }
+    mainContainer.classList.add('loading');
+    document.getElementById('loadingIndicator').style.display = 'block';
+    try {
+        const response = await fetch('/api/delete-all', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('删除所有剪贴板失败');
+        showNotification('所有剪贴板已成功删除', 'success');
+        initClipboardList(); // Re-initialize to show empty list or default
+    } catch (error) {
+        console.error('删除所有剪贴板失败:', error);
+        showNotification(`删除所有剪贴板失败: ${error.message}`, 'error');
+    } finally {
+        mainContainer.classList.remove('loading');
+        document.getElementById('loadingIndicator').style.display = 'none';
     }
 }
 
