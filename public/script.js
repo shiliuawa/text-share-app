@@ -269,23 +269,32 @@ async function renameClipboard() {
         debug.className = 'failure';
         return;
     }
+
+    if (newName === oldKey) {
+        renameInput.style.display = 'none';
+        renameBtn.style.display = 'none';
+        return;
+    }
+
     mainContainer.classList.add('loading');
+    document.getElementById('loadingIndicator').style.display = 'block';
+
     try {
-        if (newName !== oldKey) {
-            const content = document.getElementById('content').value;
-            await fetch(`/api/content?key=${newName}`, {
-                method: 'POST',
-                body: content,
-                headers: {
-                    'Content-Type': 'text/plain',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            await fetch(`/api/content?key=${oldKey}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+        const response = await fetch('/api/rename', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ oldKey: oldKey, newKey: newName })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || '重命名失败');
         }
+
+        // Update the UI
         const selectedOption = clipboardList.options[clipboardList.selectedIndex];
         selectedOption.value = newName;
         selectedOption.text = newName;
@@ -295,13 +304,22 @@ async function renameClipboard() {
         renameBtn.style.display = 'none';
         debug.innerText = '成功';
         debug.className = 'success';
-        await loadContent();
+        
+        // No need to call loadContent() as the content hasn't changed, just the key
+        lastKey = newName; // Update lastKey to prevent unnecessary re-fetch
+        updateShareLink(newName);
+
+
     } catch (error) {
         console.error('重命名失败:', error);
-        debug.innerText = '失败';
+        debug.innerText = `失败: ${error.message}`;
         debug.className = 'failure';
+        alert('重命名失败: ' + error.message);
+        // If rename fails, refresh the list to ensure consistency
+        await initClipboardList();
     } finally {
         mainContainer.classList.remove('loading');
+        document.getElementById('loadingIndicator').style.display = 'none';
     }
 }
 
