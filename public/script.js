@@ -440,7 +440,7 @@ function updateShareLink(key) {
 function copyShareLink() {
     shareUrl.select();
     document.execCommand('copy');
-    alert(translations[localStorage.getItem('language') || 'zh'].copy_link + '成功');
+    showNotification(translations[localStorage.getItem('language') || 'zh'].copy_link + '成功', 'success');
     debug.innerText = '成功';
     debug.className = 'success';
 }
@@ -452,8 +452,8 @@ window.onload = () => {
     if (token) {
         authContainer.style.display = 'none';
         mainContainer.style.display = 'block';
-        initClipboardList();
-    } else {
-        authContainer.style.display = 'block';
-    }
-};
+            initClipboardList();
+        } else {
+            authContainer.style.display = 'block';
+        }
+    };
