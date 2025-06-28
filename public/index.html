@@ -175,14 +175,14 @@
             <textarea id="content" placeholder="在这里粘贴或输入文本..."></textarea>
             
             <div class="actions">
-                <button onclick="createShareLink()" data-i18n="create_share_link">创建分享链接</button>
                 <input type="file" id="fileInput" accept="text/*" style="flex-grow: 0;">
                 <input id="downloadExt" value="txt" placeholder="后缀名" style="width: 80px;">
                 <button onclick="downloadContent()" data-i18n="download" class="secondary">下载</button>
             </div>
 
-            <div class="share-options">
+            <div class="share-controls">
                 <input type="password" id="sharePassword" placeholder="为分享链接设置密码 (可选)">
+                <button onclick="createShareLink()" data-i18n="share">分享</button>
             </div>
 
             <div id="loadingIndicator" data-i18n="loading">正在生成链接...</div>

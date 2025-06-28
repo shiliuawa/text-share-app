@@ -16,7 +16,7 @@ const langSelect = document.getElementById('langSelect');
 const translations = {
     zh: {
         main_title: '文本分享',
-        create_share_link: '创建分享链接',
+        share: '分享',
         download: '下载',
         loading: '正在处理...',
         copy_link: '复制链接',
@@ -36,7 +36,7 @@ const translations = {
     },
     en: {
         main_title: 'Text Share',
-        create_share_link: 'Create Share Link',
+        share: 'Share',
         download: 'Download',
         loading: 'Processing...',
         copy_link: 'Copy Link',
@@ -164,7 +164,7 @@ async function loadSharedContent() {
         document.querySelector('[onclick="createShareLink()"]').style.display = 'none';
         fileInput.style.display = 'none';
         sharePasswordEl.style.display = 'none';
-        document.querySelector('.share-options').style.display = 'none';
+        document.querySelector('.share-controls').style.display = 'none';
 
 
     } catch (error) {
