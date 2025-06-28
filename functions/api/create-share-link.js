@@ -1,44 +1,60 @@
-import { createHash } from 'crypto';
+// functions/api/create-share-link.js
+
+// A simple (non-cryptographically secure) utility to generate short random strings.
+function generateRandomId(length = 8) {
+    return Math.random().toString(36).substring(2, 2 + length);
+}
+
+// Utility to hash passwords
+async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 export async function onRequest(context) {
     const { request, env } = context;
     const kv = env.CLIPBOARD_KV;
 
     if (request.method !== 'POST') {
-        return new Response('方法不支持', { status: 405 });
+        return new Response('Method Not Allowed', { status: 405 });
     }
 
     try {
-        const { clipboardKey, sharePassword } = await request.json();
+        const { content, password } = await request.json();
 
-        if (!clipboardKey) {
-            return new Response('缺少剪贴板键', { status: 400 });
+        if (!content || typeof content !== 'string' || !content.trim()) {
+            return new Response('Content cannot be empty', { status: 400 });
         }
 
-        let shareUrl;
-        if (sharePassword) {
-            // Generate a unique ID for the protected share
-            const shareId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            const passwordHash = createHash('sha256').update(sharePassword).digest('hex');
+        // Generate a unique key for this new share
+        const key = generateRandomId();
 
-            // Store metadata for the protected share
-            await kv.put(`share_metadata_${shareId}`, JSON.stringify({
-                originalKey: clipboardKey,
-                passwordHash: passwordHash
-            }));
-            shareUrl = `${context.url.origin}/api/share?id=${shareId}`;
-        } else {
-            // Public share link
-            shareUrl = `${context.url.origin}/api/share?key=${clipboardKey}`;
+        const dataToStore = {
+            content: content,
+            passwordHash: null,
+            createdAt: new Date().toISOString()
+        };
+
+        // If a password is provided, hash it and store the hash
+        if (password && typeof password === 'string' && password.length > 0) {
+            dataToStore.passwordHash = await hashPassword(password);
         }
 
-        return new Response(JSON.stringify({ shareUrl }), {
+        // Store the data in Cloudflare KV
+        // We don't set an expiration here, but you could add `expirationTtl` for ephemeral shares
+        await kv.put(key, JSON.stringify(dataToStore));
+
+        // Return the unique key to the client
+        return new Response(JSON.stringify({ key: key }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
 
     } catch (error) {
-        console.error('创建分享链接失败:', error);
-        return new Response(`服务器错误: ${error.message}`, { status: 500 });
+        console.error('Failed to create share link:', error);
+        return new Response(`Server Error: ${error.message}`, { status: 500 });
     }
 }

@@ -1,459 +1,281 @@
 
-const debug = document.getElementById('debug');
-const clipboardList = document.getElementById('clipboardList');
-const renameInput = document.getElementById('renameInput');
-const renameBtn = document.getElementById('renameBtn');
-const downloadExt = document.getElementById('downloadExt');
-const authContainer = document.getElementById('authContainer');
-const mainContainer = document.getElementById('mainContainer');
-const passwordInput = document.getElementById('passwordInput');
-const fileInput = document.getElementById('fileInput');
-const shareUrl = document.getElementById('shareUrl');
-let lastKey = null;
-let lastContent = '';
-let token = localStorage.getItem('authToken') || null;
-let saveTimeout;
+// Simplified script for a text sharing website
 
+// DOM Elements
+const contentEl = document.getElementById('content');
+const fileInput = document.getElementById('fileInput');
+const downloadExtEl = document.getElementById('downloadExt');
+const mainContainer = document.getElementById('mainContainer');
+const shareUrlEl = document.getElementById('shareUrl');
+const sharePasswordEl = document.getElementById('sharePassword');
+const shareLinkContainer = document.getElementById('shareLink');
+const loadingIndicator = document.getElementById('loadingIndicator');
+const langSelect = document.getElementById('langSelect');
+
+// Translations
 const translations = {
     zh: {
-        title: '在线剪贴板',
-        enter_password: '请输入密码',
-        submit: '提交',
-        add_clipboard: '添加剪贴板',
-        delete_clipboard: '删除当前剪贴板',
-        rename: '重命名',
-        confirm_rename: '确认重命名',
-        save: '保存',
+        main_title: '文本分享',
+        create_share_link: '创建分享链接',
         download: '下载',
-        loading: '加载中...',
-        copy_link: '复制链接'
+        loading: '正在处理...',
+        copy_link: '复制链接',
+        copy_success: '链接已复制!',
+        copy_error: '复制失败',
+        create_success: '分享链接已创建!',
+        create_error: '创建链接失败',
+        load_error: '加载内容失败',
+        content_empty: '内容不能为空',
+        file_too_large: '文件不能超过 1MB',
+        upload_error: '文件读取失败',
+        enter_password_prompt: '请输入访问密码:',
+        wrong_password: '密码错误',
+        content_placeholder: '在这里粘贴或输入文本...',
+        password_placeholder: '为分享链接设置密码 (可选)',
+        download_ext_placeholder: '后缀名'
     },
     en: {
-        title: 'Online Clipboard',
-        enter_password: 'Enter Password',
-        submit: 'Submit',
-        add_clipboard: 'Add Clipboard',
-        delete_clipboard: 'Delete Current Clipboard',
-        rename: 'Rename',
-        confirm_rename: 'Confirm Rename',
-        save: 'Save',
+        main_title: 'Text Share',
+        create_share_link: 'Create Share Link',
         download: 'Download',
-        loading: 'Loading...',
-        copy_link: 'Copy Link'
+        loading: 'Processing...',
+        copy_link: 'Copy Link',
+        copy_success: 'Link copied!',
+        copy_error: 'Failed to copy',
+        create_success: 'Share link created!',
+        create_error: 'Failed to create link',
+        load_error: 'Failed to load content',
+        content_empty: 'Content cannot be empty',
+        file_too_large: 'File cannot exceed 1MB',
+        upload_error: 'Failed to read file',
+        enter_password_prompt: 'Please enter the password to view:',
+        wrong_password: 'Incorrect password',
+        content_placeholder: 'Paste or type text here...',
+        password_placeholder: 'Set a password for the link (optional)',
+        download_ext_placeholder: 'extension'
     }
 };
 
+let currentLang = 'zh';
+
+// --- Core Functions ---
+
 function setLanguage(lang) {
     localStorage.setItem('language', lang);
+    currentLang = lang;
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        el.textContent = translations[lang][key];
-        if (el.tagName === 'TITLE') document.title = translations[lang][key];
-    });
-    document.getElementById('content').placeholder = lang === 'zh' ? '在这里输入内容...' : 'Enter content here...';
-}
-
-async function verifyPassword() {
-    mainContainer.classList.add('loading');
-    document.getElementById('loadingIndicator').style.display = 'block';
-    const password = passwordInput.value.trim();
-    try {
-        const response = await fetch('/api/verify', {
-            method: 'POST',
-            body: JSON.stringify({ password }),
-            headers: { 'Content-Type': 'application/json' }
-        });
-        if (!response.ok) throw new Error('密码错误');
-        const { token: newToken } = await response.json();
-        localStorage.setItem('authToken', newToken);
-        token = newToken;
-        authContainer.style.display = 'none';
-        mainContainer.style.display = 'block';
-        debug.innerText = '成功';
-        debug.className = 'success';
-        initClipboardList();
-    } catch (error) {
-        console.error('密码验证失败:', error);
-        debug.innerText = '失败';
-        debug.className = 'failure';
-        alert(translations[localStorage.getItem('language') || 'zh'].enter_password + '错误');
-    } finally {
-        mainContainer.classList.remove('loading');
-        document.getElementById('loadingIndicator').style.display = 'none';
-    }
-}
-
-async function initClipboardList() {
-    try {
-        const response = await fetch('/api/list', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('获取列表失败');
-        const keys = await response.json();
-        clipboardList.innerHTML = '';
-        keys.forEach(key => {
-            const option = document.createElement('option');
-            option.value = key;
-            option.text = key;
-            clipboardList.appendChild(option);
-        });
-        if (keys.length === 0) {
-            const option = document.createElement('option');
-            option.value = 'default';
-            option.text = '默认剪贴板';
-            clipboardList.appendChild(option);
+        if (translations[lang][key]) {
+            // For buttons and titles
+            if (el.tagName === 'BUTTON' || el.tagName === 'H1' || el.tagName === 'TITLE') {
+                el.textContent = translations[lang][key];
+            }
+            // For placeholders
+            if (el.placeholder) {
+                el.placeholder = translations[lang][key];
+            }
         }
-        sortClipboardList();
-        loadContent();
-    } catch (error) {
-        console.error('初始化剪贴板列表失败:', error);
-        debug.innerText = '失败';
-        debug.className = 'failure';
-    }
+    });
+    // Special cases
+    document.title = translations[lang].main_title;
+    contentEl.placeholder = translations[lang].content_placeholder;
+    sharePasswordEl.placeholder = translations[lang].password_placeholder;
+    downloadExtEl.placeholder = translations[lang].download_ext_placeholder;
 }
 
-async function loadContent() {
-    const clipboardKey = clipboardList.value;
-    if (clipboardKey === lastKey) {
-        document.getElementById('content').value = lastContent || '';
-        debug.innerText = '成功';
-        debug.className = 'success';
-        updateShareLink(clipboardKey);
+
+async function createShareLink() {
+    const content = contentEl.value;
+    if (!content.trim()) {
+        showNotification(translations[currentLang].content_empty, 'error');
         return;
     }
-    mainContainer.classList.add('loading');
-    document.getElementById('loadingIndicator').style.display = 'block';
+
+    setLoading(true);
+    const password = sharePasswordEl.value;
+
     try {
-        const response = await fetch(`/api/content?key=${clipboardKey}`, {
-            
-            headers: { 'Authorization': `Bearer ${token}` }
+        const response = await fetch('/api/create-share-link', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content, password })
         });
-        if (!response.ok) throw new Error('加载失败');
-        lastContent = await response.text();
-        lastKey = clipboardKey;
-        document.getElementById('content').value = lastContent || '';
-        debug.innerText = '成功';
-        debug.className = 'success';
-        updateShareLink(clipboardKey);
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        const { key } = await response.json();
+        shareUrlEl.value = `${window.location.origin}${window.location.pathname}?id=${key}`;
+        shareLinkContainer.style.display = 'flex';
+        showNotification(translations[currentLang].create_success, 'success');
+
     } catch (error) {
-        console.error('加载内容失败:', error);
-        debug.innerText = '失败';
-        debug.className = 'failure';
-        document.getElementById('content').value = translations[localStorage.getItem('language') || 'zh'].loading + '失败，请检查网络或刷新';
+        console.error('Error creating share link:', error);
+        showNotification(translations[currentLang].create_error, 'error');
     } finally {
-        mainContainer.classList.remove('loading');
-        document.getElementById('loadingIndicator').style.display = 'none';
+        setLoading(false);
     }
 }
 
-async function saveContent() {
-    const clipboardKey = clipboardList.value;
-    const content = document.getElementById('content').value;
-    mainContainer.classList.add('loading');
-    document.getElementById('loadingIndicator').style.display = 'block';
-    try {
-        const response = await fetch(`/api/content?key=${clipboardKey}`, {
-            method: 'POST',
-            body: content,
-            headers: {
-                'Content-Type': 'text/plain',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        if (!response.ok) throw new Error('保存失败');
-        debug.innerText = '成功';
-        debug.className = 'success';
-        alert(translations[localStorage.getItem('language') || 'zh'].save + '成功');
-    } catch (error) {
-        console.error('保存内容失败:', error);
-        debug.innerText = '失败';
-        debug.className = 'failure';
-        alert(translations[localStorage.getItem('language') || 'zh'].save + '失败，请重试');
-    } finally {
-        mainContainer.classList.remove('loading');
-        document.getElementById('loadingIndicator').style.display = 'none';
+async function loadSharedContent() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+
+    if (!id) {
+        // This is the main page for creating new shares, not viewing one.
+        mainContainer.style.display = 'block';
+        return;
     }
-    await loadContent();
+
+    setLoading(true);
+
+    try {
+        let password = '';
+        // First, try to get it without a password
+        let response = await fetch(`/api/content?key=${id}`);
+
+        if (response.status === 401) { // Unauthorized, likely needs a password
+            password = prompt(translations[currentLang].enter_password_prompt);
+            if (password === null) { // User cancelled prompt
+                 contentEl.value = 'Password entry cancelled.';
+                 return;
+            }
+            response = await fetch(`/api/content?key=${id}`, {
+                headers: { 'Authorization': `Bearer ${password}` }
+            });
+        }
+
+        if (response.status === 403) { // Forbidden, wrong password
+            alert(translations[currentLang].wrong_password);
+            contentEl.value = 'Incorrect password.';
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const content = await response.text();
+        contentEl.value = content;
+        contentEl.readOnly = true; // Make content read-only when viewing
+
+        // Hide creation-related UI elements
+        document.querySelector('[onclick="createShareLink()"]').style.display = 'none';
+        fileInput.style.display = 'none';
+        sharePasswordEl.style.display = 'none';
+        document.querySelector('.share-options').style.display = 'none';
+
+
+    } catch (error) {
+        console.error('Error loading content:', error);
+        contentEl.value = translations[currentLang].load_error;
+        showNotification(translations[currentLang].load_error, 'error');
+    } finally {
+        setLoading(false);
+        mainContainer.style.display = 'block';
+    }
+}
+
+
+// --- Utility Functions ---
+
+function setLoading(isLoading) {
+    if (isLoading) {
+        mainContainer.classList.add('loading');
+        loadingIndicator.style.display = 'block';
+    } else {
+        mainContainer.classList.remove('loading');
+        loadingIndicator.style.display = 'none';
+    }
 }
 
 function downloadContent() {
-    const content = document.getElementById('content').value;
-    if (!content) {
-        showNotification(translations[localStorage.getItem('language') || 'zh'].download + '失败：内容为空', 'error');
-        debug.innerText = '失败';
-        debug.className = 'failure';
-        return;
-    }
-    const clipboardKey = clipboardList.value;
-    const ext = downloadExt.value.trim() || 'txt';
+    const content = contentEl.value;
+    if (!content) return;
+
+    const ext = downloadExtEl.value.trim() || 'txt';
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    const filename = id ? `shared-${id}.${ext}` : `text-share.${ext}`;
+
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${clipboardKey}.${ext}`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
-    debug.innerText = '成功';
-    debug.className = 'success';
 }
 
-async function addClipboard() {
-    const existingKeys = Array.from(clipboardList.options).map(option => option.value);
-    let newKey = `clipboard-${existingKeys.length + 1}`;
-    while (existingKeys.includes(newKey)) {
-        newKey = `clipboard-${existingKeys.length + 1}-${Math.random().toString(36).substr(2, 5)}`;
-    }
-    const newOption = document.createElement('option');
-    newOption.value = newKey;
-    newOption.text = newKey;
-    clipboardList.appendChild(newOption);
-    sortClipboardList();
-    clipboardList.value = newKey;
-    document.getElementById('content').value = '';
-    debug.innerText = '成功';
-    debug.className = 'success';
-    await loadContent();
-}
-
-async function deleteClipboard() {
-    if (clipboardList.options.length <= 1) {
-        showNotification(translations[localStorage.getItem('language') || 'zh'].delete_clipboard + '至少保留一个', 'error');
-        debug.innerText = '失败';
-        debug.className = 'failure';
-        return;
-    }
-    const clipboardKey = clipboardList.value;
-    mainContainer.classList.add('loading');
-    document.getElementById('loadingIndicator').style.display = 'block';
+function copyShareLink() {
+    shareUrlEl.select();
     try {
-        const response = await fetch(`/api/content?key=${clipboardKey}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('删除失败');
-        clipboardList.remove(clipboardList.selectedIndex);
-        clipboardList.value = clipboardList.options[0].value;
-        debug.innerText = '成功';
-        debug.className = 'success';
-        showNotification('剪贴板删除成功', 'success');
-        await loadContent();
-    } catch (error) {
-        console.error('删除失败:', error);
-        debug.innerText = '失败';
-        debug.className = 'failure';
-        showNotification('剪贴板删除失败', 'error');
-    } finally {
-        mainContainer.classList.remove('loading');
-        document.getElementById('loadingIndicator').style.display = 'none';
+        document.execCommand('copy');
+        showNotification(translations[currentLang].copy_success, 'success');
+    } catch (err) {
+        showNotification(translations[currentLang].copy_error, 'error');
     }
 }
 
-async function deleteAllClipboards() {
-    if (!confirm('您确定要删除所有剪贴板吗？此操作不可撤销！')) {
-        return;
-    }
-    mainContainer.classList.add('loading');
-    document.getElementById('loadingIndicator').style.display = 'block';
-    try {
-        const response = await fetch('/api/delete-all', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) throw new Error('删除所有剪贴板失败');
-        showNotification('所有剪贴板已成功删除', 'success');
-        initClipboardList(); // Re-initialize to show empty list or default
-    } catch (error) {
-        console.error('删除所有剪贴板失败:', error);
-        showNotification(`删除所有剪贴板失败: ${error.message}`, 'error');
-    } finally {
-        mainContainer.classList.remove('loading');
-        document.getElementById('loadingIndicator').style.display = 'none';
-    }
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.id = 'notification';
+    notification.className = type; // 'success' or 'error'
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    // Trigger fade in
+    setTimeout(() => {
+        notification.style.opacity = '1';
+    }, 10);
+
+    // Fade out and remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            notification.remove();
+        }, 500);
+    }, 3000);
 }
 
-function showRenameInput() {
-    renameInput.style.display = 'inline';
-    renameBtn.style.display = 'inline';
-    renameInput.value = clipboardList.options[clipboardList.selectedIndex].text;
-    renameInput.focus();
-}
 
-async function renameClipboard() {
-    const newName = renameInput.value.trim();
-    if (!newName) {
-        alert(translations[localStorage.getItem('language') || 'zh'].rename + '名称不可为空');
-        debug.innerText = '失败';
-        debug.className = 'failure';
-        return;
-    }
-    const oldKey = clipboardList.value;
-    const existingKeys = Array.from(clipboardList.options).map(option => option.value);
-    if (existingKeys.includes(newName) && newName !== oldKey) {
-        alert(translations[localStorage.getItem('language') || 'zh'].rename + '名称已存在');
-        debug.innerText = '失败';
-        debug.className = 'failure';
-        return;
-    }
+// --- Event Listeners ---
 
-    if (newName === oldKey) {
-        renameInput.style.display = 'none';
-        renameBtn.style.display = 'none';
-        return;
-    }
-
-    mainContainer.classList.add('loading');
-    document.getElementById('loadingIndicator').style.display = 'block';
-
-    try {
-        const response = await fetch('/api/rename', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ oldKey: oldKey, newKey: newName })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText || '重命名失败');
-        }
-
-        // Update the UI
-        const selectedOption = clipboardList.options[clipboardList.selectedIndex];
-        selectedOption.value = newName;
-        selectedOption.text = newName;
-        sortClipboardList();
-        clipboardList.value = newName;
-        renameInput.style.display = 'none';
-        renameBtn.style.display = 'none';
-        debug.innerText = '成功';
-        debug.className = 'success';
-        
-        // No need to call loadContent() as the content hasn't changed, just the key
-        lastKey = newName; // Update lastKey to prevent unnecessary re-fetch
-        updateShareLink(newName);
-
-
-    } catch (error) {
-        console.error('重命名失败:', error);
-        debug.innerText = `失败: ${error.message}`;
-        debug.className = 'failure';
-        alert('重命名失败: ' + error.message);
-        // If rename fails, refresh the list to ensure consistency
-        await initClipboardList();
-    } finally {
-        mainContainer.classList.remove('loading');
-        document.getElementById('loadingIndicator').style.display = 'none';
-    }
-}
-
-function sortClipboardList() {
-    const options = Array.from(clipboardList.options);
-    options.sort((a, b) => a.value.localeCompare(b.value, 'zh', { numeric: true }));
-    while (clipboardList.firstChild) {
-        clipboardList.removeChild(clipboardList.firstChild);
-    }
-    options.forEach(option => clipboardList.appendChild(option));
-}
-
-fileInput.addEventListener('change', async function () {
+fileInput.addEventListener('change', () => {
     const file = fileInput.files[0];
-    if (!file) {
-        debug.innerText = '失败';
-        debug.className = 'failure';
-        return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-        alert(translations[localStorage.getItem('language') || 'zh'].upload + '失败：文件不得超过10MB');
-        debug.innerText = '失败';
-        debug.className = 'failure';
-        return;
-    }
-    const fileName = file.name.split('.').slice(0, -1).join('.') || 'uploaded-file';
-    const fileExt = file.name.split('.').pop() || 'txt';
-    const existingKeys = Array.from(clipboardList.options).map(option => option.value);
-    let newKey = fileName;
-    let suffix = 1;
-    while (existingKeys.includes(newKey)) {
-        newKey = `${fileName}-${suffix}`;
-        suffix++;
-    }
-    mainContainer.classList.add('loading');
-    document.getElementById('loadingIndicator').style.display = 'block';
-    try {
-        const content = await file.text();
-        const response = await fetch(`/api/content?key=${newKey}`, {
-            method: 'POST',
-            body: content,
-            headers: {
-                'Content-Type': 'text/plain',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        if (!response.ok) throw new Error('上传失败');
-        const newOption = document.createElement('option');
-        newOption.value = newKey;
-        newOption.text = newKey;
-        clipboardList.appendChild(newOption);
-        sortClipboardList();
-        clipboardList.value = newKey;
-        downloadExt.value = fileExt;
-        document.getElementById('content').value = content;
-        debug.innerText = '成功';
-        debug.className = 'success';
-    } catch (error) {
-        console.error('上传失败:', error);
-        debug.innerText = '失败';
-        debug.className = 'failure';
-        alert(translations[localStorage.getItem('language') || 'zh'].upload + '失败，请重试');
-    } finally {
-        mainContainer.classList.remove('loading');
-        document.getElementById('loadingIndicator').style.display = 'none';
-        fileInput.value = '';
-    }
-});
+    if (!file) return;
 
-document.getElementById('content').addEventListener('input', () => {
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(saveContent, 5000);
+    if (file.size > 1 * 1024 * 1024) { // 1MB limit
+        showNotification(translations[currentLang].file_too_large, 'error');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        contentEl.value = e.target.result;
+    };
+    reader.onerror = () => {
+        showNotification(translations[currentLang].upload_error, 'error');
+    };
+    reader.readAsText(file);
+    fileInput.value = ''; // Reset for next upload
 });
 
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
-        saveContent();
-    } else if (e.ctrlKey && e.key === 'd') {
-        e.preventDefault();
-        downloadContent();
+        // In this new model, Ctrl+S should not trigger an auto-save.
+        // It could, however, trigger the "Create Share Link" action.
+        createShareLink();
     }
 });
 
-function updateShareLink(key) {
-    const shareLink = document.getElementById('shareLink');
-    shareUrl.value = `${window.location.origin}/api/share/${key}`;
-    shareLink.style.display = 'block';
-}
-
-function copyShareLink() {
-    shareUrl.select();
-    document.execCommand('copy');
-    showNotification(translations[localStorage.getItem('language') || 'zh'].copy_link + '成功', 'success');
-    debug.innerText = '成功';
-    debug.className = 'success';
-}
-
 window.onload = () => {
     const savedLang = localStorage.getItem('language') || 'zh';
-    document.getElementById('langSelect').value = savedLang;
+    langSelect.value = savedLang;
     setLanguage(savedLang);
-    if (token) {
-        authContainer.style.display = 'none';
-        mainContainer.style.display = 'block';
-            initClipboardList();
-        } else {
-            authContainer.style.display = 'block';
-        }
-    };
+    loadSharedContent();
+};
