@@ -132,6 +132,17 @@ async function loadSharedContent() {
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
 
+    // Initially hide elements that should only be visible on the creation page
+    // This ensures they are hidden by default if an ID is present
+    if (id) {
+        document.querySelector('[onclick="createShareLink()"]').style.display = 'none';
+        fileInput.style.display = 'none';
+        sharePasswordEl.style.display = 'none';
+        document.querySelector('.share-controls').style.display = 'none';
+        document.getElementById('advancedOptions').style.display = 'none';
+        document.querySelector('h1[data-i18n="main_title"]').style.display = 'none';
+    }
+
     if (!id) {
         // This is the main page for creating new shares, not viewing one.
         mainContainer.style.display = 'block';
