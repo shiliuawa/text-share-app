@@ -189,13 +189,12 @@
                 <summary data-i18n="advanced_options">高级选项</summary>
                 <div style="padding: 10px; border: 1px solid #eee; border-top: none; border-radius: 0 0 8px 8px;">
                     <div style="margin-bottom: 10px;">
-                        <label for="deletionTime" data-i18n="deletion_time">删除时间:</label>
-                        <select id="deletionTime" style="margin-left: 5px;">
-                            <option value="3600">1 小时</option>
-                            <option value="86400">1 天</option>
-                            <option value="604800">1 周</option>
-                            <option value="2592000" selected>1 个月</option>
-                            <option value="7776000">3 个月</option>
+                        <label for="deletionTimeValue" data-i18n="deletion_time">删除时间:</label>
+                        <input type="number" id="deletionTimeValue" value="1" min="1" style="width: 60px; margin-left: 5px;">
+                        <select id="deletionTimeUnit" style="margin-left: 5px;">
+                            <option value="hour" data-i18n="unit_hour">小时</option>
+                            <option value="day" data-i18n="unit_day">天</option>
+                            <option value="month" selected data-i18n="unit_month">月</option>
                         </select>
                     </div>
                     <label style="display: block;">

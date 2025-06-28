@@ -11,7 +11,8 @@ const sharePasswordEl = document.getElementById('sharePassword');
 const shareLinkContainer = document.getElementById('shareLink');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const langSelect = document.getElementById('langSelect');
-const deletionTimeSelect = document.getElementById('deletionTime');
+const deletionTimeValueInput = document.getElementById('deletionTimeValue');
+const deletionTimeUnitSelect = document.getElementById('deletionTimeUnit');
 const burnAfterReadingCheckbox = document.getElementById('burnAfterReading');
 
 // Translations
@@ -37,6 +38,9 @@ const translations = {
         download_ext_placeholder: '后缀名',
         advanced_options: '高级选项',
         deletion_time: '删除时间',
+        unit_hour: '小时',
+        unit_day: '天',
+        unit_month: '月',
         burn_after_reading: '阅后即焚 (默认关闭)'
     },
     en: {
@@ -60,6 +64,9 @@ const translations = {
         download_ext_placeholder: 'extension',
         advanced_options: 'Advanced Options',
         deletion_time: 'Deletion Time',
+        unit_hour: 'Hour',
+        unit_day: 'Day',
+        unit_month: 'Month',
         burn_after_reading: 'Burn After Reading (default off)'
     }
 };
@@ -101,8 +108,42 @@ async function createShareLink() {
 
     setLoading(true);
     const password = sharePasswordEl.value;
-    const expirationTtl = parseInt(deletionTimeSelect.value, 10); // Get selected expiration time in seconds
     const burnAfterReading = burnAfterReadingCheckbox.checked;
+
+    // Calculate expirationTtl based on user input
+    const timeValue = parseInt(deletionTimeValueInput.value, 10);
+    const timeUnit = deletionTimeUnitSelect.value;
+    let expirationTtl = 0;
+
+    if (isNaN(timeValue) || timeValue <= 0) {
+        showNotification('请输入有效的删除时间', 'error');
+        setLoading(false);
+        return;
+    }
+
+    switch (timeUnit) {
+        case 'hour':
+            expirationTtl = timeValue * 3600;
+            break;
+        case 'day':
+            expirationTtl = timeValue * 86400;
+            break;
+        case 'month':
+            expirationTtl = timeValue * 2592000; // Approximate 30 days per month
+            break;
+        default:
+            expirationTtl = 2592000; // Default to 1 month if unit is invalid
+    }
+
+    // Client-side validation for expirationTtl (1 hour to 3 months)
+    const minTtl = 3600; // 1 hour
+    const maxTtl = 7776000; // 3 months (approx. 90 days)
+
+    if (expirationTtl < minTtl || expirationTtl > maxTtl) {
+        showNotification(`删除时间必须在 ${minTtl / 3600} 小时到 ${Math.round(maxTtl / 2592000)} 个月之间`, 'error');
+        setLoading(false);
+        return;
+    }
 
     try {
         const response = await fetch('/api/create-share-link', {
