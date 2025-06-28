@@ -137,8 +137,8 @@ function setLanguage(lang) {
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[lang][key]) {
-            // For buttons and titles
-            if (el.tagName === 'BUTTON' || el.tagName === 'H1' || el.tagName === 'TITLE' || el.tagName === 'SUMMARY') {
+            // For buttons, titles, summaries, and options
+            if (el.tagName === 'BUTTON' || el.tagName === 'H1' || el.tagName === 'TITLE' || el.tagName === 'SUMMARY' || el.tagName === 'OPTION') {
                 el.textContent = translations[lang][key];
             }
             // For placeholders
@@ -153,6 +153,11 @@ function setLanguage(lang) {
     sharePasswordEl.placeholder = translations[lang].password_placeholder;
     downloadExtEl.placeholder = translations[lang].download_ext_placeholder;
     darkModeToggle.textContent = translations[currentLang].toggle_dark_mode;
+
+    // Update deletion time unit options
+    document.getElementById('deletionTimeUnit').options[0].textContent = translations[currentLang].unit_hour;
+    document.getElementById('deletionTimeUnit').options[1].textContent = translations[currentLang].unit_day;
+    document.getElementById('deletionTimeUnit').options[2].textContent = translations[currentLang].unit_month;
 }
 
 function toggleDarkMode() {
