@@ -55,7 +55,7 @@ const translations = {
         unit_hour: '小时',
         unit_day: '天',
         unit_month: '月',
-        burn_after_reading: '阅后即焚 (默认关闭)',
+        burn_after_reading: '阅后即焚',
         admin_login_title: '管理员登录',
         admin_login_button: '登录',
         back_to_main: '返回',
@@ -101,7 +101,7 @@ const translations = {
         unit_hour: 'Hour',
         unit_day: 'Day',
         unit_month: 'Month',
-        burn_after_reading: 'Burn After Reading (default off)',
+        burn_after_reading: 'Burn After Reading',
         admin_login_title: 'Admin Login',
         admin_login_button: 'Login',
         back_to_main: 'Back',
@@ -136,7 +136,7 @@ function setLanguage(lang) {
         const key = el.getAttribute('data-i18n');
         if (translations[lang][key]) {
             // For buttons and titles
-            if (el.tagName === 'BUTTON' || el.tagName === 'H1' || el.tagName === 'TITLE') {
+            if (el.tagName === 'BUTTON' || el.tagName === 'H1' || el.tagName === 'TITLE' || el.tagName === 'SUMMARY') {
                 el.textContent = translations[lang][key];
             }
             // For placeholders
