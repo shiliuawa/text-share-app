@@ -34,6 +34,7 @@ let currentEditingShareId = null; // To keep track of the share being edited
 const translations = {
     zh: {
         main_title: 'Text Share App',
+        language_name: '简体中文',
         share: '分享',
         download: '下载',
         loading: '正在处理...',
@@ -77,10 +78,13 @@ const translations = {
         cancel: '取消',
         share_updated: '分享已更新！',
         expires_in: '过期时间:',
-        toggle_dark_mode: '切换模式'
+        toggle_dark_mode: '切换模式',
+        switch_to_dark_mode: '切换到暗黑模式',
+        switch_to_light_mode: '切换到亮色模式'
     },
     en: {
         main_title: 'Text Share App',
+        language_name: 'English',
         share: 'Share',
         download: 'Download',
         loading: 'Processing...',
@@ -123,8 +127,9 @@ const translations = {
         save: 'Save',
         cancel: 'Cancel',
         share_updated: 'Share updated!',
-        expires_in: 'Expires in:'
-    }
+        expires_in: 'Expires in:',
+        switch_to_dark_mode: 'Switch to Dark Mode',
+        switch_to_light_mode: 'Switch to Light Mode'
 };
 
 let currentLang = 'zh';
@@ -138,7 +143,7 @@ function setLanguage(lang) {
         const key = el.getAttribute('data-i18n');
         if (translations[lang][key]) {
             // For buttons, titles, summaries, and options
-            if (el.tagName === 'BUTTON' || el.tagName === 'H1' || el.tagName === 'TITLE' || el.tagName === 'SUMMARY' || el.tagName === 'OPTION') {
+            if (el.tagName === 'BUTTON' || el.tagName === 'H1' || el.tagName === 'TITLE' || el.tagName === 'SUMMARY' || el.tagName === 'OPTION' || el.tagName === 'LABEL' || el.tagName === 'SPAN') {
                 el.textContent = translations[lang][key];
             }
             // For placeholders
@@ -152,7 +157,7 @@ function setLanguage(lang) {
     contentEl.placeholder = translations[lang].content_placeholder;
     sharePasswordEl.placeholder = translations[lang].password_placeholder;
     downloadExtEl.placeholder = translations[lang].download_ext_placeholder;
-    darkModeToggle.textContent = translations[currentLang].toggle_dark_mode;
+    updateDarkModeToggleButtonText(); // Update button text on language change
 
     // Update deletion time unit options
     document.getElementById('deletionTimeUnit').options[0].textContent = translations[currentLang].unit_hour;
@@ -160,11 +165,16 @@ function setLanguage(lang) {
     document.getElementById('deletionTimeUnit').options[2].textContent = translations[currentLang].unit_month;
 }
 
+function updateDarkModeToggleButtonText() {
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    darkModeToggle.textContent = isDarkMode ? translations[currentLang].switch_to_light_mode : translations[currentLang].switch_to_dark_mode;
+}
+
 function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
     const isDarkMode = document.body.classList.contains('dark-mode');
     localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
-    darkModeToggle.textContent = translations[currentLang].toggle_dark_mode;
+    updateDarkModeToggleButtonText(); // Update button text on mode change
 }
 
 
@@ -666,7 +676,7 @@ window.onload = () => {
     for (const langCode in translations) {
         const option = document.createElement('option');
         option.value = langCode;
-        option.textContent = translations[langCode].main_title; // Using main_title as display text for language
+        option.textContent = translations[langCode].language_name; // Use language_name for display
         langSelect.appendChild(option);
     }
 
@@ -687,7 +697,7 @@ window.onload = () => {
     } else {
         document.body.classList.remove('dark-mode');
     }
-    darkModeToggle.textContent = translations[currentLang].toggle_dark_mode;
+    updateDarkModeToggleButtonText(); // Initial update of button text
 
     darkModeToggle.addEventListener('click', toggleDarkMode);
 };
