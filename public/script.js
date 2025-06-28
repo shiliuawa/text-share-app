@@ -14,6 +14,10 @@ const langSelect = document.getElementById('langSelect');
 const deletionTimeValueInput = document.getElementById('deletionTimeValue');
 const deletionTimeUnitSelect = document.getElementById('deletionTimeUnit');
 const burnAfterReadingCheckbox = document.getElementById('burnAfterReading');
+const adminLoginContainer = document.getElementById('adminLoginContainer');
+const adminPasswordInput = document.getElementById('adminPasswordInput');
+const adminDebug = document.getElementById('adminDebug');
+const adminToggleButton = document.getElementById('adminToggleButton');
 
 // Translations
 const translations = {
@@ -41,7 +45,13 @@ const translations = {
         unit_hour: '小时',
         unit_day: '天',
         unit_month: '月',
-        burn_after_reading: '阅后即焚 (默认关闭)'
+        burn_after_reading: '阅后即焚 (默认关闭)',
+        admin_login_title: '管理员登录',
+        admin_login_button: '登录',
+        back_to_main: '返回',
+        admin_toggle: '管理员登录',
+        admin_login_success: '管理员登录成功！',
+        admin_login_failure: '管理员密码错误！'
     },
     en: {
         main_title: 'Text Share',
@@ -67,7 +77,13 @@ const translations = {
         unit_hour: 'Hour',
         unit_day: 'Day',
         unit_month: 'Month',
-        burn_after_reading: 'Burn After Reading (default off)'
+        burn_after_reading: 'Burn After Reading (default off)',
+        admin_login_title: 'Admin Login',
+        admin_login_button: 'Login',
+        back_to_main: 'Back',
+        admin_toggle: 'Admin Login',
+        admin_login_success: 'Admin login successful!',
+        admin_login_failure: 'Incorrect admin password!'
     }
 };
 
@@ -310,6 +326,65 @@ function showNotification(message, type = 'success') {
             notification.remove();
         }, 500);
     }, 3000);
+}
+
+// --- Admin Functions ---
+let adminToken = localStorage.getItem('adminToken') || null;
+
+function toggleAdminLogin() {
+    if (adminLoginContainer.style.display === 'block') {
+        adminLoginContainer.style.display = 'none';
+        mainContainer.style.display = 'block';
+    } else {
+        mainContainer.style.display = 'none';
+        adminLoginContainer.style.display = 'block';
+        adminPasswordInput.value = '';
+        adminDebug.textContent = '';
+    }
+}
+
+function showMainContainer() {
+    adminLoginContainer.style.display = 'none';
+    mainContainer.style.display = 'block';
+}
+
+async function adminLogin() {
+    const password = adminPasswordInput.value;
+    if (!password) {
+        adminDebug.textContent = '请输入密码';
+        adminDebug.style.color = 'red';
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+        });
+
+        if (!response.ok) {
+            throw new Error(translations[currentLang].admin_login_failure);
+        }
+
+        const { token } = await response.json();
+        localStorage.setItem('adminToken', token);
+        adminToken = token;
+        adminDebug.textContent = translations[currentLang].admin_login_success;
+        adminDebug.style.color = 'green';
+        // Redirect to admin panel or show admin features
+        // For now, just show a success message
+        showNotification(translations[currentLang].admin_login_success, 'success');
+        // After successful login, you might want to navigate to an admin view
+        // For now, let's just hide the login and show main, or a new admin view
+        showMainContainer(); // Or a dedicated admin view
+
+    } catch (error) {
+        console.error('Admin login error:', error);
+        adminDebug.textContent = error.message;
+        adminDebug.style.color = 'red';
+        showNotification(error.message, 'error');
+    }
 }
 
 
