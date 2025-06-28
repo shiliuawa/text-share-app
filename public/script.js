@@ -25,6 +25,7 @@ const modalShareId = document.getElementById('modalShareId');
 const modalContent = document.getElementById('modalContent');
 const modalPassword = document.getElementById('modalPassword');
 const modalBurnAfterReading = document.getElementById('modalBurnAfterReading');
+const expirationDisplay = document.getElementById('expirationDisplay');
 
 let currentEditingShareId = null; // To keep track of the share being edited
 
@@ -73,7 +74,8 @@ const translations = {
         delete: '删除',
         save: '保存',
         cancel: '取消',
-        share_updated: '分享已更新！'
+        share_updated: '分享已更新！',
+        expires_in: '过期时间:'
     },
     en: {
         main_title: 'Text Share App',
@@ -118,7 +120,8 @@ const translations = {
         delete: 'Delete',
         save: 'Save',
         cancel: 'Cancel',
-        share_updated: 'Share updated!'
+        share_updated: 'Share updated!',
+        expires_in: 'Expires in:'
     }
 };
 
@@ -293,6 +296,16 @@ async function loadSharedContent() {
         document.querySelector('.share-controls').style.display = 'none';
         document.getElementById('advancedOptions').style.display = 'none';
         document.querySelector('h1[data-i18n="main_title"]').style.display = 'none';
+
+        // Display expiration time if available
+        const expiresAtHeader = response.headers.get('X-Expires-At');
+        if (expiresAtHeader) {
+            const expiresDate = new Date(parseInt(expiresAtHeader) * 1000);
+            expirationDisplay.textContent = `${translations[currentLang].expires_in} ${expiresDate.toLocaleString()}`;
+            expirationDisplay.style.display = 'block';
+        } else {
+            expirationDisplay.style.display = 'none';
+        }
 
         // If burn after reading is enabled, delete the content after it's read
         if (response.headers.get('X-Burn-After-Reading') === 'true') {
@@ -638,4 +651,8 @@ window.onload = () => {
     setLanguage(savedLang);
     loadSharedContent();
     setRandomBackground(); // Set random background on load
+
+    // Set default values for deletion time
+    deletionTimeValueInput.value = 24; // Default to 24 hours
+    deletionTimeUnitSelect.value = 'hour';
 };

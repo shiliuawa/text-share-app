@@ -1,4 +1,3 @@
-
 // functions/api/admin/view.js
 
 // Middleware for admin authentication (same as admin/list.js)
@@ -41,7 +40,19 @@ export async function onRequest(context) {
             return new Response('Content not found', { status: 404 });
         }
 
-        const storedData = JSON.parse(storedDataString);
+        let storedData;
+        try {
+            storedData = JSON.parse(storedDataString);
+        } catch (e) {
+            // If JSON.parse fails, assume it's old plain text content
+            console.warn(`Could not parse JSON for key ${key}:`, e);
+            storedData = {
+                content: storedDataString,
+                passwordHash: null,
+                createdAt: '未知',
+                burnAfterReading: false
+            };
+        }
 
         // Return the full stored data, including content and metadata
         return new Response(JSON.stringify(storedData), {

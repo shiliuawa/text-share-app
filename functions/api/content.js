@@ -21,13 +21,29 @@ export async function onRequest(context) {
 
     if (request.method === 'GET') {
         try {
-            const storedDataString = await kv.get(key);
+            // Get the key and its metadata to check expiration
+            const kvGetResult = await kv.getWithMetadata(key);
 
-            if (storedDataString === null) {
+            if (kvGetResult.value === null) {
                 return new Response('Content not found', { status: 404 });
             }
 
-            const storedData = JSON.parse(storedDataString);
+            const storedDataString = kvGetResult.value;
+            const metadata = kvGetResult.metadata;
+
+            let storedData;
+            try {
+                storedData = JSON.parse(storedDataString);
+            } catch (e) {
+                // If JSON.parse fails, assume it's old plain text content
+                console.warn(`Could not parse JSON for key ${key}:`, e);
+                storedData = {
+                    content: storedDataString,
+                    passwordHash: null,
+                    createdAt: '未知',
+                    burnAfterReading: false
+                };
+            }
 
             // Check if the content is password-protected
             if (storedData.passwordHash) {
@@ -50,6 +66,10 @@ export async function onRequest(context) {
             const headers = { 'Content-Type': 'text/plain; charset=utf-8' };
             if (storedData.burnAfterReading) {
                 headers['X-Burn-After-Reading'] = 'true';
+            }
+            // Add expiration timestamp to headers if available
+            if (metadata && metadata.expiration) {
+                headers['X-Expires-At'] = metadata.expiration.toString();
             }
 
             // If we are here, either no password was required or the correct one was provided.

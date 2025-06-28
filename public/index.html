@@ -32,6 +32,63 @@
             transition: background-image 1s ease-in-out;
         }
 
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background-color: #2c2c2c;
+            color: #f0f0f0;
+        }
+
+        body.dark-mode .container {
+            background: rgba(50, 50, 50, 0.9);
+            color: #f0f0f0;
+        }
+
+        body.dark-mode #content,
+        body.dark-mode input[type="text"],
+        body.dark-mode input[type="password"],
+        body.dark-mode input[type="file"],
+        body.dark-mode select {
+            background-color: #444;
+            border-color: #666;
+            color: #f0f0f0;
+        }
+
+        body.dark-mode button {
+            background-color: #0056b3;
+        }
+
+        body.dark-mode button:hover {
+            background-color: #003f80;
+        }
+
+        body.dark-mode button.danger {
+            background-color: #a72835;
+        }
+
+        body.dark-mode button.danger:hover {
+            background-color: #8a1f2a;
+        }
+
+        body.dark-mode button.secondary {
+            background-color: #4a4a4a;
+        }
+
+        body.dark-mode button.secondary:hover {
+            background-color: #3a3a3a;
+        }
+
+        body.dark-mode #loadingIndicator {
+            color: #0056b3;
+        }
+
+        body.dark-mode #notification.success {
+            background-color: #1e7e34;
+        }
+
+        body.dark-mode #notification.error {
+            background-color: #bd2130;
+        }
+
         .container {
             width: 100%;
             max-width: 800px;
@@ -179,6 +236,8 @@
             
             <textarea id="content" placeholder="在这里粘贴或输入文本..."></textarea>
             
+            <div id="expirationDisplay" style="text-align: center; margin-bottom: 10px; font-size: 0.9em; color: var(--secondary-color); display: none;"></div>
+            
             <div class="actions">
                 <input type="file" id="fileInput" accept="text/*" style="flex-grow: 0;">
                 <input id="downloadExt" value="txt" placeholder="后缀名" style="width: 80px;">
@@ -195,11 +254,11 @@
                 <div style="padding: 10px; border: 1px solid #eee; border-top: none; border-radius: 0 0 8px 8px;">
                     <div style="margin-bottom: 10px;">
                         <label for="deletionTimeValue" data-i18n="deletion_time">删除时间:</label>
-                        <input type="number" id="deletionTimeValue" value="1" min="1" style="width: 60px; margin-left: 5px;">
+                        <input type="number" id="deletionTimeValue" value="24" min="1" style="width: 60px; margin-left: 5px;">
                         <select id="deletionTimeUnit" style="margin-left: 5px;">
-                            <option value="hour" data-i18n="unit_hour">小时</option>
+                            <option value="hour" selected data-i18n="unit_hour">小时</option>
                             <option value="day" data-i18n="unit_day">天</option>
-                            <option value="month" selected data-i18n="unit_month">月</option>
+                            <option value="month" data-i18n="unit_month">月</option>
                         </select>
                     </div>
                     <label style="display: block;">

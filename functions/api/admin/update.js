@@ -1,4 +1,3 @@
-
 // functions/api/admin/update.js
 
 // Utility to hash passwords, must be identical to the one in create-share-link.js
@@ -47,15 +46,25 @@ export async function onRequest(context) {
         // Fetch existing data to preserve createdAt and expiration (if any)
         const existingDataString = await kv.get(key);
         let existingData = {};
-        if (existingDataString) {
-            existingData = JSON.parse(existingDataString);
+        let isJson = false;
+
+        try {
+            if (existingDataString) {
+                existingData = JSON.parse(existingDataString);
+                isJson = true;
+            }
+        } catch (e) {
+            // If JSON.parse fails, assume it's old plain text content
+            console.warn(`Could not parse JSON for key ${key} during update:`, e);
+            existingData = { content: existingDataString }; // Treat existing string as content
+            isJson = false;
         }
 
         const dataToStore = {
-            content: content,
-            passwordHash: existingData.passwordHash, // Preserve existing hash unless new password is provided
-            createdAt: existingData.createdAt || new Date().toISOString(),
-            burnAfterReading: burnAfterReading // Use new burnAfterReading value
+            content: content, // Always use the new content from the request
+            passwordHash: isJson ? existingData.passwordHash : null, // Preserve existing hash if it was JSON, otherwise null
+            createdAt: isJson ? existingData.createdAt : new Date().toISOString(), // Preserve if JSON, otherwise new date
+            burnAfterReading: burnAfterReading // Use new burnAfterReading value from request
         };
 
         // If a new password is provided, hash it and update

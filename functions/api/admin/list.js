@@ -34,20 +34,30 @@ export async function onRequest(context) {
         const shares = [];
 
         for (const key of listResponse.keys) {
-            // Fetch metadata for each key
             const storedDataString = await kv.get(key.name);
-            if (storedDataString) {
-                const storedData = JSON.parse(storedDataString);
-                shares.push({
-                    name: key.name,
-                    metadata: {
-                        passwordHash: storedData.passwordHash ? true : false,
-                        createdAt: storedData.createdAt,
-                        expiration: key.expiration,
-                        burnAfterReading: storedData.burnAfterReading || false
-                    }
-                });
+            let storedData = {};
+            let isJson = false;
+
+            try {
+                if (storedDataString) {
+                    storedData = JSON.parse(storedDataString);
+                    isJson = true;
+                }
+            } catch (e) {
+                // If JSON.parse fails, assume it's old plain text content
+                storedData = { content: storedDataString };
+                isJson = false;
             }
+
+            shares.push({
+                name: key.name,
+                metadata: {
+                    passwordHash: isJson && storedData.passwordHash ? true : false, // Only check if it was JSON
+                    createdAt: storedData.createdAt || '未知',
+                    expiration: key.expiration,
+                    burnAfterReading: isJson && storedData.burnAfterReading ? true : false // Only check if it was JSON
+                }
+            });
         }
 
         return new Response(JSON.stringify(shares), {
