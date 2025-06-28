@@ -20,6 +20,13 @@ const adminDebug = document.getElementById('adminDebug');
 const adminToggleButton = document.getElementById('adminToggleButton');
 const adminPanel = document.getElementById('adminPanel');
 const sharesList = document.getElementById('sharesList');
+const adminShareModal = document.getElementById('adminShareModal');
+const modalShareId = document.getElementById('modalShareId');
+const modalContent = document.getElementById('modalContent');
+const modalPassword = document.getElementById('modalPassword');
+const modalBurnAfterReading = document.getElementById('modalBurnAfterReading');
+
+let currentEditingShareId = null; // To keep track of the share being edited
 
 // Translations
 const translations = {
@@ -63,7 +70,10 @@ const translations = {
         share_burn_after_reading: '阅后即焚',
         view: '查看',
         edit: '编辑',
-        delete: '删除'
+        delete: '删除',
+        save: '保存',
+        cancel: '取消',
+        share_updated: '分享已更新！'
     },
     en: {
         main_title: 'Text Share',
@@ -105,7 +115,10 @@ const translations = {
         share_burn_after_reading: 'Burn After Reading',
         view: 'View',
         edit: 'Edit',
-        delete: 'Delete'
+        delete: 'Delete',
+        save: 'Save',
+        cancel: 'Cancel',
+        share_updated: 'Share updated!'
     }
 };
 
@@ -368,6 +381,7 @@ function toggleAdminLogin() {
 function showMainContainer() {
     adminLoginContainer.style.display = 'none';
     adminPanel.style.display = 'none'; // Hide admin panel when going back to main
+    adminShareModal.style.display = 'none'; // Hide modal when going back to main
     mainContainer.style.display = 'block';
 }
 
@@ -460,15 +474,89 @@ async function loadAllShares() {
     }
 }
 
-// Placeholder functions for admin actions
-function viewShare(id) {
-    alert(`查看分享: ${id}`);
-    // Implement logic to fetch and display content for editing
+async function viewShare(id) {
+    try {
+        const response = await fetch(`/api/admin/view?key=${id}`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        if (!response.ok) throw new Error(await response.text());
+        const shareData = await response.json();
+
+        modalShareId.textContent = `分享 ID: ${id}`;
+        modalContent.value = shareData.content;
+        modalContent.readOnly = true;
+        modalPassword.style.display = 'none'; // Hide password input for view
+        modalBurnAfterReading.checked = shareData.burnAfterReading;
+        modalBurnAfterReading.disabled = true; // Disable checkbox for view
+        document.querySelector('#adminShareModal button[onclick="saveShareChanges()"]').style.display = 'none'; // Hide save button
+
+        adminShareModal.style.display = 'flex';
+        currentEditingShareId = id;
+
+    } catch (error) {
+        console.error('Error viewing share:', error);
+        showNotification(`查看分享 ${id} 失败: ${error.message}`, 'error');
+    }
 }
 
-function editShare(id) {
-    alert(`编辑分享: ${id}`);
-    // Implement logic to fetch content, populate textarea, and allow saving
+async function editShare(id) {
+    try {
+        const response = await fetch(`/api/admin/view?key=${id}`, {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        if (!response.ok) throw new Error(await response.text());
+        const shareData = await response.json();
+
+        modalShareId.textContent = `编辑分享 ID: ${id}`;
+        modalContent.value = shareData.content;
+        modalContent.readOnly = false;
+        modalPassword.style.display = 'block'; // Show password input for edit
+        modalPassword.value = ''; // Clear password field
+        modalBurnAfterReading.checked = shareData.burnAfterReading;
+        modalBurnAfterReading.disabled = false; // Enable checkbox for edit
+        document.querySelector('#adminShareModal button[onclick="saveShareChanges()"]').style.display = 'inline-block'; // Show save button
+
+        adminShareModal.style.display = 'flex';
+        currentEditingShareId = id;
+
+    } catch (error) {
+        console.error('Error editing share:', error);
+        showNotification(`编辑分享 ${id} 失败: ${error.message}`, 'error');
+    }
+}
+
+async function saveShareChanges() {
+    if (!currentEditingShareId) return;
+
+    const id = currentEditingShareId;
+    const content = modalContent.value;
+    const password = modalPassword.value; // Can be empty string to remove password
+    const burnAfterReading = modalBurnAfterReading.checked;
+
+    try {
+        const response = await fetch('/api/admin/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+            body: JSON.stringify({ key: id, content, password, burnAfterReading })
+        });
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        showNotification(translations[currentLang].share_updated, 'success');
+        closeAdminShareModal();
+        loadAllShares(); // Refresh the list after saving
+
+    } catch (error) {
+        console.error('Error saving share changes:', error);
+        showNotification(`保存分享 ${id} 失败: ${error.message}`, 'error');
+    }
+}
+
+function closeAdminShareModal() {
+    adminShareModal.style.display = 'none';
+    currentEditingShareId = null;
 }
 
 async function deleteShare(id) {
