@@ -31,7 +31,7 @@ let currentEditingShareId = null; // To keep track of the share being edited
 // Translations
 const translations = {
     zh: {
-        main_title: '文本分享',
+        main_title: 'Text Share App',
         share: '分享',
         download: '下载',
         loading: '正在处理...',
@@ -76,7 +76,7 @@ const translations = {
         share_updated: '分享已更新！'
     },
     en: {
-        main_title: 'Text Share',
+        main_title: 'Text Share App',
         share: 'Share',
         download: 'Download',
         loading: 'Processing...',
@@ -149,6 +149,19 @@ function setLanguage(lang) {
     downloadExtEl.placeholder = translations[lang].download_ext_placeholder;
 }
 
+async function setRandomBackground() {
+    try {
+        const response = await fetch('https://www.loliapi.com/acg/');
+        if (!response.ok) {
+            console.error('Failed to fetch background image:', response.statusText);
+            return;
+        }
+        const imageUrl = response.url; // The API directly redirects to the image
+        document.body.style.backgroundImage = `url('${imageUrl}')`;
+    } catch (error) {
+        console.error('Error setting background image:', error);
+    }
+}
 
 async function createShareLink() {
     const content = contentEl.value;
@@ -624,4 +637,5 @@ window.onload = () => {
     langSelect.value = savedLang;
     setLanguage(savedLang);
     loadSharedContent();
+    setRandomBackground(); // Set random background on load
 };

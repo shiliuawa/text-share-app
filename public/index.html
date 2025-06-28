@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="title">文本分享</title>
+    <title data-i18n="title">Text Share App</title>
     <style>
         :root {
             --primary-color: #007bff;
@@ -25,12 +25,17 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            background-image: url(''); /* Placeholder, will be set by JS */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            transition: background-image 1s ease-in-out;
         }
 
         .container {
             width: 100%;
             max-width: 800px;
-            background: #fff;
+            background: rgba(255, 255, 255, 0.9); /* Slightly transparent background for readability */
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
