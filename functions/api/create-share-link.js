@@ -1,4 +1,3 @@
-
 // functions/api/create-share-link.js
 
 // A simple (non-cryptographically secure) utility to generate short random strings.
@@ -24,10 +23,20 @@ export async function onRequest(context) {
     }
 
     try {
-        const { content, password, timedDeletion, burnAfterReading } = await request.json();
+        const { content, password, expirationTtl, burnAfterReading } = await request.json();
 
         if (!content || typeof content !== 'string' || !content.trim()) {
             return new Response('Content cannot be empty', { status: 400 });
+        }
+
+        // Validate expirationTtl
+        const minTtl = 3600; // 1 hour
+        const maxTtl = 7776000; // 3 months (approx. 90 days)
+        let finalTtl = expirationTtl; // Use provided TTL
+
+        if (typeof finalTtl !== 'number' || finalTtl < minTtl || finalTtl > maxTtl) {
+            // If invalid, default to 1 month (2592000 seconds)
+            finalTtl = 2592000;
         }
 
         // Generate a unique key for this new share
@@ -45,14 +54,8 @@ export async function onRequest(context) {
             dataToStore.passwordHash = await hashPassword(password);
         }
 
-        // Store the data in Cloudflare KV
-        const kvOptions = {};
-        if (timedDeletion) {
-            // Set expiration to 24 hours (86400 seconds) if timed deletion is enabled
-            kvOptions.expirationTtl = 86400;
-        }
-
-        await kv.put(key, JSON.stringify(dataToStore), kvOptions);
+        // Store the data in Cloudflare KV with the specified TTL
+        await kv.put(key, JSON.stringify(dataToStore), { expirationTtl: finalTtl });
 
         // Return the unique key to the client
         return new Response(JSON.stringify({ key: key }), {

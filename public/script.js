@@ -11,7 +11,7 @@ const sharePasswordEl = document.getElementById('sharePassword');
 const shareLinkContainer = document.getElementById('shareLink');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const langSelect = document.getElementById('langSelect');
-const timedDeletionCheckbox = document.getElementById('timedDeletion');
+const deletionTimeSelect = document.getElementById('deletionTime');
 const burnAfterReadingCheckbox = document.getElementById('burnAfterReading');
 
 // Translations
@@ -36,7 +36,7 @@ const translations = {
         password_placeholder: '为分享链接设置密码 (可选)',
         download_ext_placeholder: '后缀名',
         advanced_options: '高级选项',
-        timed_deletion: '定时删除 (默认开启)',
+        deletion_time: '删除时间',
         burn_after_reading: '阅后即焚 (默认关闭)'
     },
     en: {
@@ -59,7 +59,7 @@ const translations = {
         password_placeholder: 'Set a password for the link (optional)',
         download_ext_placeholder: 'extension',
         advanced_options: 'Advanced Options',
-        timed_deletion: 'Timed Deletion (default on)',
+        deletion_time: 'Deletion Time',
         burn_after_reading: 'Burn After Reading (default off)'
     }
 };
@@ -101,14 +101,14 @@ async function createShareLink() {
 
     setLoading(true);
     const password = sharePasswordEl.value;
-    const timedDeletion = timedDeletionCheckbox.checked;
+    const expirationTtl = parseInt(deletionTimeSelect.value, 10); // Get selected expiration time in seconds
     const burnAfterReading = burnAfterReadingCheckbox.checked;
 
     try {
         const response = await fetch('/api/create-share-link', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content, password, timedDeletion, burnAfterReading })
+            body: JSON.stringify({ content, password, expirationTtl, burnAfterReading })
         });
 
         if (!response.ok) {
@@ -286,6 +286,13 @@ fileInput.addEventListener('change', () => {
     const reader = new FileReader();
     reader.onload = (e) => {
         contentEl.value = e.target.result;
+        // Set the download extension based on the uploaded file's extension
+        const fileNameParts = file.name.split('.');
+        if (fileNameParts.length > 1) {
+            downloadExtEl.value = fileNameParts.pop();
+        } else {
+            downloadExtEl.value = 'txt'; // Default to txt if no extension
+        }
     };
     reader.onerror = () => {
         showNotification(translations[currentLang].upload_error, 'error');

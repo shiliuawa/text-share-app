@@ -188,10 +188,16 @@
             <details id="advancedOptions" style="margin-top: 15px;">
                 <summary data-i18n="advanced_options">高级选项</summary>
                 <div style="padding: 10px; border: 1px solid #eee; border-top: none; border-radius: 0 0 8px 8px;">
-                    <label style="display: block; margin-bottom: 10px;">
-                        <input type="checkbox" id="timedDeletion" checked>
-                        <span data-i18n="timed_deletion">定时删除 (默认开启)</span>
-                    </label>
+                    <div style="margin-bottom: 10px;">
+                        <label for="deletionTime" data-i18n="deletion_time">删除时间:</label>
+                        <select id="deletionTime" style="margin-left: 5px;">
+                            <option value="3600">1 小时</option>
+                            <option value="86400">1 天</option>
+                            <option value="604800">1 周</option>
+                            <option value="2592000" selected>1 个月</option>
+                            <option value="7776000">3 个月</option>
+                        </select>
+                    </div>
                     <label style="display: block;">
                         <input type="checkbox" id="burnAfterReading">
                         <span data-i18n="burn_after_reading">阅后即焚 (默认关闭)</span>
