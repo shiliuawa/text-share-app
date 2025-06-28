@@ -11,6 +11,8 @@ const sharePasswordEl = document.getElementById('sharePassword');
 const shareLinkContainer = document.getElementById('shareLink');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const langSelect = document.getElementById('langSelect');
+const timedDeletionCheckbox = document.getElementById('timedDeletion');
+const burnAfterReadingCheckbox = document.getElementById('burnAfterReading');
 
 // Translations
 const translations = {
@@ -32,7 +34,10 @@ const translations = {
         wrong_password: '密码错误',
         content_placeholder: '在这里粘贴或输入文本...',
         password_placeholder: '为分享链接设置密码 (可选)',
-        download_ext_placeholder: '后缀名'
+        download_ext_placeholder: '后缀名',
+        advanced_options: '高级选项',
+        timed_deletion: '定时删除 (默认开启)',
+        burn_after_reading: '阅后即焚 (默认关闭)'
     },
     en: {
         main_title: 'Text Share',
@@ -52,7 +57,10 @@ const translations = {
         wrong_password: 'Incorrect password',
         content_placeholder: 'Paste or type text here...',
         password_placeholder: 'Set a password for the link (optional)',
-        download_ext_placeholder: 'extension'
+        download_ext_placeholder: 'extension',
+        advanced_options: 'Advanced Options',
+        timed_deletion: 'Timed Deletion (default on)',
+        burn_after_reading: 'Burn After Reading (default off)'
     }
 };
 
@@ -93,12 +101,14 @@ async function createShareLink() {
 
     setLoading(true);
     const password = sharePasswordEl.value;
+    const timedDeletion = timedDeletionCheckbox.checked;
+    const burnAfterReading = burnAfterReadingCheckbox.checked;
 
     try {
         const response = await fetch('/api/create-share-link', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content, password })
+            body: JSON.stringify({ content, password, timedDeletion, burnAfterReading })
         });
 
         if (!response.ok) {
@@ -165,6 +175,15 @@ async function loadSharedContent() {
         fileInput.style.display = 'none';
         sharePasswordEl.style.display = 'none';
         document.querySelector('.share-controls').style.display = 'none';
+        document.getElementById('advancedOptions').style.display = 'none';
+        document.querySelector('h1[data-i18n="main_title"]').style.display = 'none';
+
+        // If burn after reading is enabled, delete the content after it's read
+        if (response.headers.get('X-Burn-After-Reading') === 'true') {
+            await fetch(`/api/content?key=${id}`, {
+                method: 'DELETE'
+            });
+        }
 
 
     } catch (error) {
