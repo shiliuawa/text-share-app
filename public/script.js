@@ -18,6 +18,8 @@ const adminLoginContainer = document.getElementById('adminLoginContainer');
 const adminPasswordInput = document.getElementById('adminPasswordInput');
 const adminDebug = document.getElementById('adminDebug');
 const adminToggleButton = document.getElementById('adminToggleButton');
+const adminPanel = document.getElementById('adminPanel');
+const sharesList = document.getElementById('sharesList');
 
 // Translations
 const translations = {
@@ -51,7 +53,17 @@ const translations = {
         back_to_main: '返回',
         admin_toggle: '管理员登录',
         admin_login_success: '管理员登录成功！',
-        admin_login_failure: '管理员密码错误！'
+        admin_login_failure: '管理员密码错误！',
+        admin_panel_title: '管理员面板',
+        refresh_shares: '刷新分享列表',
+        share_id: 'ID',
+        share_password_protected: '密码保护',
+        share_created_at: '创建时间',
+        share_expires_at: '过期时间',
+        share_burn_after_reading: '阅后即焚',
+        view: '查看',
+        edit: '编辑',
+        delete: '删除'
     },
     en: {
         main_title: 'Text Share',
@@ -83,7 +95,17 @@ const translations = {
         back_to_main: 'Back',
         admin_toggle: 'Admin Login',
         admin_login_success: 'Admin login successful!',
-        admin_login_failure: 'Incorrect admin password!'
+        admin_login_failure: 'Incorrect admin password!',
+        admin_panel_title: 'Admin Panel',
+        refresh_shares: 'Refresh Share List',
+        share_id: 'ID',
+        share_password_protected: 'Password Protected',
+        share_created_at: 'Created At',
+        share_expires_at: 'Expires At',
+        share_burn_after_reading: 'Burn After Reading',
+        view: 'View',
+        edit: 'Edit',
+        delete: 'Delete'
     }
 };
 
@@ -345,6 +367,7 @@ function toggleAdminLogin() {
 
 function showMainContainer() {
     adminLoginContainer.style.display = 'none';
+    adminPanel.style.display = 'none'; // Hide admin panel when going back to main
     mainContainer.style.display = 'block';
 }
 
@@ -372,18 +395,100 @@ async function adminLogin() {
         adminToken = token;
         adminDebug.textContent = translations[currentLang].admin_login_success;
         adminDebug.style.color = 'green';
-        // Redirect to admin panel or show admin features
-        // For now, just show a success message
-        showNotification(translations[currentLang].admin_login_success, 'success');
-        // After successful login, you might want to navigate to an admin view
-        // For now, let's just hide the login and show main, or a new admin view
-        showMainContainer(); // Or a dedicated admin view
+        
+        // On successful login, hide login and show admin panel
+        adminLoginContainer.style.display = 'none';
+        adminPanel.style.display = 'block';
+        loadAllShares(); // Load shares after successful login
 
     } catch (error) {
         console.error('Admin login error:', error);
         adminDebug.textContent = error.message;
         adminDebug.style.color = 'red';
         showNotification(error.message, 'error');
+    }
+}
+
+async function loadAllShares() {
+    sharesList.innerHTML = ''; // Clear previous list
+    sharesList.appendChild(document.createTextNode(translations[currentLang].loading));
+
+    try {
+        const response = await fetch('/api/admin/list', {
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        const shares = await response.json();
+        sharesList.innerHTML = ''; // Clear loading text
+
+        if (shares.length === 0) {
+            sharesList.appendChild(document.createTextNode('没有分享内容。'));
+            return;
+        }
+
+        shares.forEach(share => {
+            const li = document.createElement('li');
+            li.style.marginBottom = '10px';
+            li.style.border = '1px solid #eee';
+            li.style.padding = '10px';
+            li.style.borderRadius = '5px';
+
+            const createdAt = new Date(share.metadata.createdAt).toLocaleString();
+            const expiresAt = share.metadata.expiration ? new Date(share.metadata.expiration * 1000).toLocaleString() : '永不';
+
+            li.innerHTML = `
+                <strong>${translations[currentLang].share_id}:</strong> ${share.name}<br>
+                <strong>${translations[currentLang].share_password_protected}:</strong> ${share.metadata.passwordHash ? '是' : '否'}<br>
+                <strong>${translations[currentLang].share_created_at}:</strong> ${createdAt}<br>
+                <strong>${translations[currentLang].share_expires_at}:</strong> ${expiresAt}<br>
+                <strong>${translations[currentLang].share_burn_after_reading}:</strong> ${share.metadata.burnAfterReading ? '是' : '否'}<br>
+                <button onclick="viewShare('${share.name}')" class="secondary" style="margin-right: 5px;">${translations[currentLang].view}</button>
+                <button onclick="editShare('${share.name}')" class="secondary" style="margin-right: 5px;">${translations[currentLang].edit}</button>
+                <button onclick="deleteShare('${share.name}')" class="danger">${translations[currentLang].delete}</button>
+            `;
+            sharesList.appendChild(li);
+        });
+
+    } catch (error) {
+        console.error('Error loading shares:', error);
+        sharesList.innerHTML = `加载分享列表失败: ${error.message}`;
+        sharesList.style.color = 'red';
+    }
+}
+
+// Placeholder functions for admin actions
+function viewShare(id) {
+    alert(`查看分享: ${id}`);
+    // Implement logic to fetch and display content for editing
+}
+
+function editShare(id) {
+    alert(`编辑分享: ${id}`);
+    // Implement logic to fetch content, populate textarea, and allow saving
+}
+
+async function deleteShare(id) {
+    if (!confirm(`确定要删除分享: ${id} 吗？`)) {
+        return;
+    }
+    try {
+        const response = await fetch(`/api/admin/delete?key=${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        showNotification(`分享 ${id} 已删除`, 'success');
+        loadAllShares(); // Refresh the list
+    } catch (error) {
+        console.error('Error deleting share:', error);
+        showNotification(`删除分享 ${id} 失败: ${error.message}`, 'error');
     }
 }
 

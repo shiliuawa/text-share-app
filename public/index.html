@@ -213,11 +213,19 @@
         </div>
 
         <div id="adminLoginContainer" style="display: none; padding: 20px;">
-            <h1 data-i18n="admin_login_title">管理员登录</h1>
-            <input type="password" id="adminPasswordInput" placeholder="管理员密码" style="width: 100%; margin-bottom: 10px;">
-            <button onclick="adminLogin()" data-i18n="admin_login_button">登录</button>
-            <button onclick="showMainContainer()" data-i18n="back_to_main" class="secondary" style="margin-left: 10px;">返回</button>
-            <div id="adminDebug" style="margin-top: 10px;"></div>
+                <h1 data-i18n="admin_login_title">管理员登录</h1>
+                <input type="password" id="adminPasswordInput" placeholder="管理员密码" style="width: 100%; margin-bottom: 10px;">
+                <button onclick="adminLogin()" data-i18n="admin_login_button">登录</button>
+                <button onclick="showMainContainer()" data-i18n="back_to_main" class="secondary" style="margin-left: 10px;">返回</button>
+                <div id="adminDebug" style="margin-top: 10px;"></div>
+            </div>
+
+            <div id="adminPanel" style="display: none; padding: 20px;">
+                <h1 data-i18n="admin_panel_title">管理员面板</h1>
+                <button onclick="loadAllShares()" data-i18n="refresh_shares" class="secondary">刷新分享列表</button>
+                <ul id="sharesList" style="list-style: none; padding: 0; margin-top: 20px;"></ul>
+                <button onclick="showMainContainer()" data-i18n="back_to_main" class="secondary" style="margin-top: 20px;">返回主页</button>
+            </div>
         </div>
     </div>
 
