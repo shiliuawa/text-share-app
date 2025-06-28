@@ -13,6 +13,12 @@
             --light-color: #f8f9fa;
             --dark-color: #343a40;
             --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+            /* Dark Mode Colors */
+            --dark-mode-bg: #2c2c2c;
+            --dark-mode-text: #f8f9fa;
+            --dark-mode-container-bg: rgba(44, 44, 44, 0.9);
+            --dark-mode-border: #555;
         }
 
         body {
@@ -32,25 +38,23 @@
             transition: background-image 1s ease-in-out;
         }
 
-        /* Dark Mode Styles */
         body.dark-mode {
-            background-color: #2c2c2c;
-            color: #f0f0f0;
+            background-color: var(--dark-mode-bg);
+            color: var(--dark-mode-text);
         }
 
         body.dark-mode .container {
-            background: rgba(50, 50, 50, 0.9);
-            color: #f0f0f0;
+            background: var(--dark-mode-container-bg);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         }
 
         body.dark-mode #content,
         body.dark-mode input[type="text"],
         body.dark-mode input[type="password"],
-        body.dark-mode input[type="file"],
-        body.dark-mode select {
+        body.dark-mode input[type="file"] {
             background-color: #444;
-            border-color: #666;
-            color: #f0f0f0;
+            color: var(--dark-mode-text);
+            border: 1px solid var(--dark-mode-border);
         }
 
         body.dark-mode button {
@@ -61,33 +65,49 @@
             background-color: #003f80;
         }
 
-        body.dark-mode button.danger {
-            background-color: #a72835;
-        }
-
-        body.dark-mode button.danger:hover {
-            background-color: #8a1f2a;
-        }
-
         body.dark-mode button.secondary {
-            background-color: #4a4a4a;
+            background-color: #444;
         }
 
         body.dark-mode button.secondary:hover {
-            background-color: #3a3a3a;
+            background-color: #666;
         }
 
-        body.dark-mode #loadingIndicator {
-            color: #0056b3;
+        body.dark-mode #langSelect {
+            background-color: #444;
+            color: var(--dark-mode-text);
+            border: 1px solid var(--dark-mode-border);
         }
 
-        body.dark-mode #notification.success {
-            background-color: #1e7e34;
+        body.dark-mode #expirationDisplay {
+            color: var(--dark-mode-text);
         }
 
-        body.dark-mode #notification.error {
-            background-color: #bd2130;
+        body.dark-mode #advancedOptions summary {
+            color: var(--dark-mode-text);
         }
+
+        body.dark-mode #advancedOptions > div {
+            border-color: var(--dark-mode-border);
+        }
+
+        body.dark-mode #adminShareModal > div {
+            background: var(--dark-mode-container-bg);
+            color: var(--dark-mode-text);
+        }
+
+        body.dark-mode #adminShareModal input,
+        body.dark-mode #adminShareModal textarea {
+            background-color: #444;
+            color: var(--dark-mode-text);
+            border: 1px solid var(--dark-mode-border);
+        }
+
+        body.dark-mode #sharesList li {
+            border-color: var(--dark-mode-border);
+        }
+
+        
 
         .container {
             width: 100%;
@@ -229,6 +249,8 @@
         <option value="zh">中文</option>
         <option value="en">English</option>
     </select>
+
+    <button id="darkModeToggle" style="position: fixed; top: 20px; right: 100px;">切换模式</button>
 
     <div class="container">
         <div id="mainContainer">

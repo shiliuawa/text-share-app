@@ -26,6 +26,7 @@ const modalContent = document.getElementById('modalContent');
 const modalPassword = document.getElementById('modalPassword');
 const modalBurnAfterReading = document.getElementById('modalBurnAfterReading');
 const expirationDisplay = document.getElementById('expirationDisplay');
+const darkModeToggle = document.getElementById('darkModeToggle');
 
 let currentEditingShareId = null; // To keep track of the share being edited
 
@@ -75,7 +76,8 @@ const translations = {
         save: '保存',
         cancel: '取消',
         share_updated: '分享已更新！',
-        expires_in: '过期时间:'
+        expires_in: '过期时间:',
+        toggle_dark_mode: '切换模式'
     },
     en: {
         main_title: 'Text Share App',
@@ -150,7 +152,16 @@ function setLanguage(lang) {
     contentEl.placeholder = translations[lang].content_placeholder;
     sharePasswordEl.placeholder = translations[lang].password_placeholder;
     downloadExtEl.placeholder = translations[lang].download_ext_placeholder;
+    darkModeToggle.textContent = translations[currentLang].toggle_dark_mode;
 }
+
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+    darkModeToggle.textContent = translations[currentLang].toggle_dark_mode;
+}
+
 
 async function setRandomBackground() {
     try {
@@ -655,4 +666,15 @@ window.onload = () => {
     // Set default values for deletion time
     deletionTimeValueInput.value = 24; // Default to 24 hours
     deletionTimeUnitSelect.value = 'hour';
+
+    // Dark mode initialization
+    const savedDarkMode = localStorage.getItem('darkMode');
+    if (savedDarkMode === 'enabled' || savedDarkMode === null) { // Default to dark mode if no preference
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+    darkModeToggle.textContent = translations[currentLang].toggle_dark_mode;
+
+    darkModeToggle.addEventListener('click', toggleDarkMode);
 };
