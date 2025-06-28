@@ -22,7 +22,7 @@
         }
 
         body {
-            font-family: var(--font-family);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
             background-color: var(--light-color);
@@ -35,7 +35,7 @@
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
-            transition: background-image 1s ease-in-out;
+            transition: background-image 1s ease-in-out, background-color 0.3s ease;
         }
 
         body.dark-mode {
@@ -45,7 +45,7 @@
 
         body.dark-mode .container {
             background: var(--dark-mode-container-bg);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
 
         body.dark-mode #content,
@@ -73,7 +73,8 @@
             background-color: #666;
         }
 
-        body.dark-mode #langSelect {
+        body.dark-mode #langSelect,
+        body.dark-mode #darkModeToggle {
             background-color: #444;
             color: var(--dark-mode-text);
             border: 1px solid var(--dark-mode-border);
@@ -107,15 +108,15 @@
             border-color: var(--dark-mode-border);
         }
 
-        
-
         .container {
             width: 100%;
             max-width: 800px;
-            background: rgba(255, 255, 255, 0.9); /* Slightly transparent background for readability */
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.95); /* Slightly less transparent */
+            padding: 30px; /* Increased padding */
+            border-radius: 12px; /* More rounded corners */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* Stronger shadow */
+            backdrop-filter: blur(5px); /* Frosted glass effect */
+            -webkit-backdrop-filter: blur(5px); /* For Safari */
         }
 
         #mainContainer {
@@ -125,40 +126,57 @@
         h1 {
             text-align: center;
             color: var(--primary-color);
+            margin-bottom: 25px; /* Increased spacing below heading */
+            font-size: 2.2em; /* Larger heading */
+            font-weight: 600;
         }
 
         #content {
             width: 100%;
-            height: 350px; /* Increased height */
-            font-size: 16px;
-            border-radius: 4px;
+            height: 300px; /* Slightly reduced height for better balance */
+            font-size: 1.1em; /* Larger font size */
+            border-radius: 8px; /* More rounded corners */
             border: 1px solid #ccc;
-            padding: 10px;
+            padding: 15px;
             box-sizing: border-box;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            resize: vertical; /* Allow vertical resizing */
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        #content:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+            outline: none;
         }
 
         .actions {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
         }
 
         button {
-            padding: 10px 15px;
-            font-size: 14px;
+            padding: 12px 20px;
+            font-size: 16px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             background-color: var(--primary-color);
             color: white;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            flex-shrink: 0;
         }
 
         button:hover {
             background-color: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
         }
 
         button.secondary {
@@ -170,31 +188,43 @@
         }
 
         input[type="text"], input[type="password"], input[type="file"] {
-            padding: 10px;
-            font-size: 14px;
-            border-radius: 4px;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 6px;
             border: 1px solid #ccc;
             flex-grow: 1;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus, input[type="file"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+            outline: none;
         }
 
         #loadingIndicator {
             display: none;
             text-align: center;
             color: var(--primary-color);
-            margin: 10px 0;
+            margin: 20px 0;
+            font-size: 1.1em;
         }
 
         #shareLink {
-            margin-top: 15px;
+            margin-top: 20px;
             display: none;
             align-items: center;
             gap: 10px;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
         }
         
         .share-options {
-            margin-top: 10px;
+            margin-top: 15px;
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
         }
 
@@ -204,11 +234,29 @@
 
         #shareUrl {
             flex-grow: 1;
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+        }
+
+        #langSelect,
+        #darkModeToggle {
+            position: fixed;
+            top: 20px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background-color: white;
+            cursor: pointer;
+            font-size: 1em;
+            z-index: 100;
         }
 
         #langSelect {
-            position: absolute;
-            top: 20px;
+            right: 120px;
+        }
+
+        #darkModeToggle {
             right: 20px;
         }
         
@@ -222,13 +270,14 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 25px;
+            border-radius: 8px;
             color: white;
             font-weight: bold;
             z-index: 1000;
             opacity: 0;
-            transition: opacity 0.5s ease-in-out;
+            transition: opacity 0.5s ease-in-out, background-color 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         #notification.success {
@@ -242,15 +291,72 @@
         #notification.hidden {
             display: none;
         }
+
+        #adminShareModal > div {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            width: 90%;
+            max-width: 700px;
+        }
+
+        #adminShareModal input,
+        #adminShareModal textarea {
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin-bottom: 15px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            #content {
+                height: 250px;
+                font-size: 1em;
+            }
+
+            button {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+
+            input[type="text"], input[type="password"], input[type="file"] {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .actions, .share-controls, .share-options {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            #fileInput, #downloadExt, #sharePassword, #shareUrl {
+                width: 100%;
+            }
+
+            #langSelect, #darkModeToggle, #adminToggleButton {
+                position: static;
+                margin-bottom: 10px;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-    <select id="langSelect" onchange="setLanguage(this.value)">
-        <option value="zh">中文</option>
-        <option value="en">English</option>
-    </select>
+    <select id="langSelect" onchange="setLanguage(this.value)"></select>
 
-    <button id="darkModeToggle" style="position: fixed; top: 20px; right: 100px;">切换模式</button>
+    <button id="darkModeToggle"></button>
 
     <div class="container">
         <div id="mainContainer">

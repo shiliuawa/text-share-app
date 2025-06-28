@@ -657,6 +657,14 @@ document.addEventListener('keydown', (e) => {
 });
 
 window.onload = () => {
+    // Populate language select
+    for (const langCode in translations) {
+        const option = document.createElement('option');
+        option.value = langCode;
+        option.textContent = translations[langCode].main_title; // Using main_title as display text for language
+        langSelect.appendChild(option);
+    }
+
     const savedLang = localStorage.getItem('language') || 'zh';
     langSelect.value = savedLang;
     setLanguage(savedLang);
