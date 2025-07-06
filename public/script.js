@@ -312,7 +312,10 @@ async function loadSharedContent() {
         }
 
         const content = await response.text();
-        contentEl.value = content;
+        const markdownOutput = document.getElementById('markdown-output');
+        markdownOutput.innerHTML = marked.parse(content);
+        markdownOutput.style.display = 'block';
+        contentEl.style.display = 'none'; // Hide the textarea
         contentEl.readOnly = true; // Make content read-only when viewing
 
         // Hide creation-related UI elements

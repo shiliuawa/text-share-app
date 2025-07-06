@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <title data-i18n="title">Text Share App</title>
     <style>
         :root {
@@ -313,6 +314,61 @@
             margin-bottom: 15px;
         }
 
+        /* Markdown styles */
+        .markdown-body {
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #fff;
+            line-height: 1.6;
+        }
+
+        body.dark-mode .markdown-body {
+            background-color: #333;
+            border-color: var(--dark-mode-border);
+        }
+
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.3em;
+        }
+
+        body.dark-mode .markdown-body h1, body.dark-mode .markdown-body h2, body.dark-mode .markdown-body h3 {
+            border-bottom-color: var(--dark-mode-border);
+        }
+
+        .markdown-body code {
+            background-color: #f0f0f0;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+        }
+
+        body.dark-mode .markdown-body code {
+            background-color: #555;
+        }
+
+        .markdown-body pre {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        body.dark-mode .markdown-body pre {
+            background-color: #555;
+        }
+
+        .markdown-body blockquote {
+            border-left: 4px solid #ccc;
+            padding-left: 15px;
+            color: #666;
+        }
+
+        body.dark-mode .markdown-body blockquote {
+            border-left-color: #555;
+            color: #bbb;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 600px) {
             .container {
@@ -365,6 +421,7 @@
         <div id="mainContainer">
             <h1 data-i18n="main_title">文本分享</h1>
             
+            <div id="markdown-output" class="markdown-body" style="display: none;"></div>
             <textarea id="content" placeholder="在这里粘贴或输入文本..."></textarea>
             
             <div id="expirationDisplay" style="text-align: center; margin-bottom: 10px; font-size: 0.9em; color: var(--secondary-color); display: none;"></div>
