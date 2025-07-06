@@ -243,19 +243,20 @@
         #darkModeToggle {
             position: fixed;
             top: 20px;
-            padding: 10px 15px; /* Increased padding */
-            border-radius: 8px; /* More rounded corners */
+            padding: 10px 15px;
+            border-radius: 8px;
             border: 1px solid #ccc;
-            background-color: white;
+            background-color: var(--light-color); /* Changed from white */
+            color: var(--dark-color); /* Explicitly set for light mode */
             cursor: pointer;
-            font-size: 1.1em; /* Larger font size */
+            font-size: 1.1em;
             z-index: 100;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
         }
 
         #langSelect {
-            right: 150px; /* Adjusted position */
+            right: 180px; /* Adjusted position */
         }
 
         #darkModeToggle {
