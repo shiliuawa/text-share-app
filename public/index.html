@@ -4,502 +4,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <title data-i18n="title">Text Share App</title>
-    <style>
-        :root {
-            --primary-color: #007bff;
-            --secondary-color: #6c757d;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --light-color: #f8f9fa;
-            --dark-color: #343a40;
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-
-            /* Dark Mode Colors */
-            --dark-mode-bg: #2c2c2c;
-            --dark-mode-text: #f8f9fa;
-            --dark-mode-container-bg: rgba(44, 44, 44, 0.9);
-            --dark-mode-border: #555;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: var(--light-color);
-            color: var(--dark-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-image: url(''); /* Placeholder, will be set by JS */
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            transition: background-image 1s ease-in-out, background-color 0.3s ease;
-        }
-
-        body.dark-mode {
-            background-color: var(--dark-mode-bg);
-            color: var(--dark-mode-text);
-        }
-
-        body.dark-mode .container {
-            background: var(--dark-mode-container-bg);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        }
-
-        body.dark-mode #content,
-        body.dark-mode input[type="text"],
-        body.dark-mode input[type="password"],
-        body.dark-mode input[type="file"] {
-            background-color: #444;
-            color: var(--dark-mode-text);
-            border: 1px solid var(--dark-mode-border);
-        }
-
-        body.dark-mode button {
-            background-color: #0056b3;
-        }
-
-        body.dark-mode button:hover {
-            background-color: #003f80;
-        }
-
-        body.dark-mode button.secondary {
-            background-color: #444;
-        }
-
-        body.dark-mode button.secondary:hover {
-            background-color: #666;
-        }
-
-        body.dark-mode #langSelect,
-        body.dark-mode #darkModeToggle {
-            background-color: #444;
-            color: var(--dark-mode-text);
-            border: 1px solid var(--dark-mode-border);
-        }
-
-        body.dark-mode #expirationDisplay {
-            color: var(--dark-mode-text);
-        }
-
-        body.dark-mode #advancedOptions summary {
-            color: var(--dark-mode-text);
-        }
-
-        body.dark-mode #advancedOptions > div {
-            border-color: var(--dark-mode-border);
-        }
-
-        body.dark-mode #adminShareModal > div {
-            background: var(--dark-mode-container-bg);
-            color: var(--dark-mode-text);
-        }
-
-        body.dark-mode #adminShareModal input,
-        body.dark-mode #adminShareModal textarea {
-            background-color: #444;
-            color: var(--dark-mode-text);
-            border: 1px solid var(--dark-mode-border);
-        }
-
-        body.dark-mode #sharesList li {
-            border-color: var(--dark-mode-border);
-        }
-
-        .container {
-            width: 100%;
-            max-width: 800px;
-            background: rgba(255, 255, 255, 0.95); /* Slightly less transparent */
-            padding: 30px; /* Increased padding */
-            border-radius: 12px; /* More rounded corners */
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* Stronger shadow */
-            backdrop-filter: blur(5px); /* Frosted glass effect */
-            -webkit-backdrop-filter: blur(5px); /* For Safari */
-        }
-
-        #mainContainer {
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 25px; /* Increased spacing below heading */
-            font-size: 2.2em; /* Larger heading */
-            font-weight: 600;
-        }
-
-        #content {
-            width: 100%;
-            height: 300px; /* Slightly reduced height for better balance */
-            font-size: 1.1em; /* Larger font size */
-            border-radius: 8px; /* More rounded corners */
-            border: 1px solid #ccc;
-            padding: 15px;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-            resize: vertical; /* Allow vertical resizing */
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        #content:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-            outline: none;
-        }
-
-        .actions {
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-        }
-
-        button {
-            padding: 12px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            background-color: var(--primary-color);
-            color: white;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            flex-shrink: 0;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-            transform: translateY(-1px);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        button.secondary {
-            background-color: var(--secondary-color);
-        }
-        
-        button.secondary:hover {
-            background-color: #5a6268;
-        }
-
-        input[type="text"], input[type="password"], input[type="file"] {
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            flex-grow: 1;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        input[type="text"]:focus, input[type="password"]:focus, input[type="file"]:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-            outline: none;
-        }
-
-        #loadingIndicator {
-            display: none;
-            text-align: center;
-            color: var(--primary-color);
-            margin: 20px 0;
-            font-size: 1.1em;
-        }
-
-        #shareLink {
-            margin-top: 20px;
-            display: none;
-            align-items: center;
-            gap: 10px;
-            background-color: #e9ecef;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
-        }
-        
-        .share-options {
-            margin-top: 15px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        #sharePassword {
-            flex-grow: 1;
-        }
-
-        #shareUrl {
-            flex-grow: 1;
-            background-color: #e9ecef;
-            border: 1px solid #dee2e6;
-            cursor: pointer;
-        }
-
-        #langSelect,
-        #darkModeToggle {
-            position: fixed;
-            top: 20px;
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            background-color: var(--light-color); /* Changed from white */
-            color: var(--dark-color); /* Explicitly set for light mode */
-            cursor: pointer;
-            font-size: 1.1em;
-            z-index: 100;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-
-        #langSelect {
-            right: 180px; /* Adjusted position */
-        }
-
-        #darkModeToggle {
-            right: 20px;
-        }
-        
-        .loading {
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
-        #notification {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 25px;
-            border-radius: 8px;
-            color: white;
-            font-weight: bold;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out, background-color 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        #notification.success {
-            background-color: var(--success-color);
-        }
-
-        #notification.error {
-            background-color: var(--danger-color);
-        }
-
-        #notification.hidden {
-            display: none;
-        }
-
-        #adminShareModal > div {
-            background: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            width: 90%;
-            max-width: 700px;
-        }
-
-        #adminShareModal input,
-        #adminShareModal textarea {
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            margin-bottom: 15px;
-        }
-
-        /* Markdown styles */
-        .markdown-body {
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            background-color: #fff;
-            line-height: 1.6;
-        }
-
-        body.dark-mode .markdown-body {
-            background-color: #333;
-            border-color: var(--dark-mode-border);
-        }
-
-        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
-            border-bottom: 1px solid #eee;
-            padding-bottom: 0.3em;
-        }
-
-        body.dark-mode .markdown-body h1, body.dark-mode .markdown-body h2, body.dark-mode .markdown-body h3 {
-            border-bottom-color: var(--dark-mode-border);
-        }
-
-        .markdown-body code {
-            background-color: #f0f0f0;
-            padding: 0.2em 0.4em;
-            border-radius: 3px;
-        }
-
-        body.dark-mode .markdown-body code {
-            background-color: #555;
-        }
-
-        .markdown-body pre {
-            background-color: #f0f0f0;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-        }
-
-        body.dark-mode .markdown-body pre {
-            background-color: #555;
-        }
-
-        .markdown-body blockquote {
-            border-left: 4px solid #ccc;
-            padding-left: 15px;
-            color: #666;
-        }
-
-        body.dark-mode .markdown-body blockquote {
-            border-left-color: #555;
-            color: #bbb;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
-            }
-
-            h1 {
-                font-size: 1.8em;
-            }
-
-            #content {
-                height: 250px;
-                font-size: 1em;
-            }
-
-            button {
-                padding: 10px 15px;
-                font-size: 14px;
-            }
-
-            input[type="text"], input[type="password"], input[type="file"] {
-                padding: 10px;
-                font-size: 14px;
-            }
-
-            .actions, .share-controls, .share-options {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            #fileInput, #downloadExt, #sharePassword, #shareUrl {
-                width: 100%;
-            }
-
-            #langSelect, #darkModeToggle, #adminToggleButton {
-                position: static;
-                margin-bottom: 10px;
-                width: 100%;
-            }
-        }
-    </style>
+    <title data-i18n="main_title">Text Share App</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <select id="langSelect" onchange="setLanguage(this.value)"></select>
-
-    <button id="darkModeToggle"></button>
+    <div class="top-controls">
+        <select id="langSelect"></select>
+        <button id="darkModeToggle" data-i18n="toggle_dark_mode">切换模式</button>
+    </div>
 
     <div class="container">
+        <!-- Main page for creating shares -->
         <div id="mainContainer">
             <h1 data-i18n="main_title">文本分享</h1>
             
             <div id="markdown-output" class="markdown-body" style="display: none;"></div>
-            <textarea id="content" placeholder="在这里粘贴或输入文本..."></textarea>
+            <textarea id="content" data-i18n-placeholder="content_placeholder"></textarea>
             
-            <div id="expirationDisplay" style="text-align: center; margin-bottom: 10px; font-size: 0.9em; color: var(--secondary-color); display: none;"></div>
+            <div id="expirationDisplay" style="display: none;"></div>
             
             <div class="actions">
-                <input type="file" id="fileInput" accept="text/*" style="flex-grow: 0;">
-                <input id="downloadExt" value="txt" placeholder="后缀名" style="width: 80px;">
-                <button onclick="downloadContent()" data-i18n="download" class="secondary">下载</button>
+                <label for="fileInput" class="file-upload-button" data-i18n="upload_file">上传文件</label>
+                <input type="file" id="fileInput" accept="text/*" style="display: none;">
+                <input id="downloadExt" value="txt" data-i18n-placeholder="download_ext_placeholder">
+                <button id="downloadButton" data-i18n="download">下载</button>
             </div>
 
             <div class="share-controls">
-                <input type="password" id="sharePassword" placeholder="为分享链接设置密码 (可选)">
-                <button onclick="createShareLink()" data-i18n="share">分享</button>
+                <input type="password" id="sharePassword" data-i18n-placeholder="password_placeholder">
+                <button id="createShareButton" data-i18n="share">分享</button>
             </div>
 
-            <details id="advancedOptions" style="margin-top: 15px;">
+            <details id="advancedOptions">
                 <summary data-i18n="advanced_options">高级选项</summary>
-                <div style="padding: 10px; border: 1px solid #eee; border-top: none; border-radius: 0 0 8px 8px;">
-                    <div style="margin-bottom: 10px;">
+                <div class="advanced-options-content">
+                    <div>
                         <label for="deletionTimeValue" data-i18n="deletion_time">删除时间:</label>
-                        <input type="number" id="deletionTimeValue" value="24" min="1" style="width: 60px; margin-left: 5px;">
-                        <select id="deletionTimeUnit" style="margin-left: 5px;">
-                            <option value="hour" selected data-i18n="unit_hour">小时</option>
+                        <input type="number" id="deletionTimeValue" value="24" min="1">
+                        <select id="deletionTimeUnit">
+                            <option value="hour" data-i18n="unit_hour">小时</option>
                             <option value="day" data-i18n="unit_day">天</option>
                             <option value="month" data-i18n="unit_month">月</option>
                         </select>
                     </div>
-                    <label style="display: block;">
+                    <label>
                         <input type="checkbox" id="burnAfterReading">
-                        <span data-i18n="burn_after_reading">阅后即焚 (默认关闭)</span>
+                        <span data-i18n="burn_after_reading">阅后即焚</span>
                     </label>
                 </div>
             </details>
 
-            <div id="loadingIndicator" data-i18n="loading">正在生成链接...</div>
+            <div id="loadingIndicator" style="display: none;" data-i18n="loading">正在处理...</div>
 
-            <div id="shareLink">
+            <div id="shareLinkContainer" style="display: none;">
                 <input id="shareUrl" readonly>
-                <button onclick="copyShareLink()" data-i18n="copy_link">复制链接</button>
+                <button id="copyLinkButton" data-i18n="copy_link">复制链接</button>
             </div>
         </div>
 
-        <div id="adminLoginContainer" style="display: none; padding: 20px;">
-                <h1 data-i18n="admin_login_title">管理员登录</h1>
-                <input type="password" id="adminPasswordInput" placeholder="管理员密码" style="width: 100%; margin-bottom: 10px;">
-                <button onclick="adminLogin()" data-i18n="admin_login_button">登录</button>
-                <button onclick="showMainContainer()" data-i18n="back_to_main" class="secondary" style="margin-left: 10px;">返回</button>
-                <div id="adminDebug" style="margin-top: 10px;"></div>
+        <!-- Admin Login Page -->
+        <div id="adminLoginContainer" style="display: none;">
+            <h1 data-i18n="admin_login_title">管理员登录</h1>
+            <input type="password" id="adminPasswordInput" data-i18n-placeholder="password_placeholder">
+            <div class="admin-buttons">
+                <button id="adminLoginButton" data-i18n="admin_login_button">登录</button>
+                <button id="backToMainFromLogin" data-i18n="back_to_main" class="secondary">返回</button>
             </div>
-
-            <div id="adminPanel" style="display: none; padding: 20px;">
-                <h1 data-i18n="admin_panel_title">管理员面板</h1>
-                <button onclick="loadAllShares()" data-i18n="refresh_shares" class="secondary">刷新分享列表</button>
-                <ul id="sharesList" style="list-style: none; padding: 0; margin-top: 20px;"></ul>
-                <button onclick="showMainContainer()" data-i18n="back_to_main" class="secondary" style="margin-top: 20px;">返回主页</button>
-            </div>
+            <div id="adminDebug"></div>
         </div>
 
-        <!-- Admin Share View/Edit Modal -->
-        <div id="adminShareModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1001; justify-content: center; align-items: center;">
-            <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 90%; max-width: 700px;">
-                <h2 id="modalShareId" style="text-align: center; margin-bottom: 15px;"></h2>
-                <textarea id="modalContent" style="width: 100%; height: 250px; font-size: 16px; border-radius: 4px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; margin-bottom: 10px;"></textarea>
-                <input type="password" id="modalPassword" placeholder="新密码 (留空则不变)" style="width: 100%; padding: 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc; margin-bottom: 10px;">
-                <label style="display: block; margin-bottom: 10px;">
-                    <input type="checkbox" id="modalBurnAfterReading">
-                    <span data-i18n="burn_after_reading">阅后即焚</span>
-                </label>
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button onclick="saveShareChanges()" data-i18n="save">保存</button>
-                    <button onclick="closeAdminShareModal()" data-i18n="cancel" class="secondary">取消</button>
-                </div>
+        <!-- Admin Panel Page -->
+        <div id="adminPanel" style="display: none;">
+            <h1 data-i18n="admin_panel_title">管理员面板</h1>
+            <div class="admin-buttons">
+                <button id="refreshSharesButton" data-i18n="refresh_shares" class="secondary">刷新列表</button>
+                <button id="backToMainFromPanel" data-i18n="back_to_main" class="secondary">返回主页</button>
+            </div>
+            <ul id="sharesList"></ul>
+        </div>
+    </div>
+
+    <!-- Admin Share View/Edit Modal -->
+    <div id="adminShareModal" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modalShareId"></h2>
+            <textarea id="modalContent"></textarea>
+            <input type="password" id="modalPassword" data-i18n-placeholder="password_placeholder">
+            <label>
+                <input type="checkbox" id="modalBurnAfterReading">
+                <span data-i18n="burn_after_reading">阅后即焚</span>
+            </label>
+            <div class="modal-buttons">
+                <button id="saveShareChangesButton" data-i18n="save">保存</button>
+                <button id="closeModalButton" data-i18n="cancel" class="secondary">取消</button>
             </div>
         </div>
     </div>
-    </div>
 
-    <button id="adminToggleButton" onclick="toggleAdminLogin()" style="position: fixed; bottom: 20px; right: 20px;" data-i18n="admin_toggle">管理员登录</button>
+    <button id="adminToggleButton" data-i18n="admin_toggle" class="admin-toggle-button">管理员登录</button>
+    
+    <div id="notification"></div>
 
     <script src="script.js" defer></script>
 </body>
