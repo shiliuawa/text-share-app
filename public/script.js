@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = event.target.files[0];
         if (!file) return;
 
-        if (file.size > 1 * 1024 * 1024) { // 1MB limit
+        if (file.size > 25 * 1024 * 1024) { // 25MB limit
             showNotification(translations[state.lang].file_too_large, 'error');
             return;
         }
