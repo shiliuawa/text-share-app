@@ -21,6 +21,16 @@
             <div id="markdown-output" class="markdown-body" style="display: none;"></div>
             <textarea id="content" data-i18n-placeholder="content_placeholder"></textarea>
             
+            <div id="attachmentContainer" style="display: none; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <span id="attachedFileName" style="font-weight: bold;"></span>
+                    <button id="clearAttachmentButton" class="secondary" data-i18n="clear_attachment"></button>
+                </div>
+                <div id="filePreview" style="border: 1px solid #eee; padding: 10px; border-radius: 8px; background-color: #f9f9f9; min-height: 100px; display: flex; justify-content: center; align-items: center; overflow: hidden;">
+                    <!-- Preview content will be inserted here -->
+                </div>
+            </div>
+            
             <div id="expirationDisplay" style="display: none;"></div>
             
             <div class="actions">

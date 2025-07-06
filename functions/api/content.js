@@ -63,7 +63,7 @@ export async function onRequest(context) {
                 }
             }
 
-            const headers = { 'Content-Type': 'text/plain; charset=utf-8' };
+            const headers = { 'Content-Type': 'application/json' };
             if (storedData.burnAfterReading) {
                 headers['X-Burn-After-Reading'] = 'true';
             }
@@ -73,7 +73,7 @@ export async function onRequest(context) {
             }
 
             // If we are here, either no password was required or the correct one was provided.
-            const response = new Response(storedData.content, {
+            const response = new Response(JSON.stringify(storedData), {
                 status: 200,
                 headers: headers
             });

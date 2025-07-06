@@ -23,10 +23,21 @@ export async function onRequest(context) {
     }
 
     try {
-        const { content, password, expirationTtl, burnAfterReading } = await request.json();
+        const { content, password, expirationTtl, burnAfterReading, attachedFile } = await request.json();
 
-        if (!content || typeof content !== 'string' || !content.trim()) {
-            return new Response('Content cannot be empty', { status: 400 });
+        if (!content && !attachedFile) {
+            return new Response('Content or attached file cannot be empty', { status: 400 });
+        }
+
+        // Validate attached file size if present
+        const MAX_KV_VALUE_SIZE_BYTES = 25 * 1024 * 1024; // 25MB
+        if (attachedFile && attachedFile.data) {
+            // Estimate size of base64 string (approx. 3 bytes for every 4 base64 chars)
+            const base64Data = attachedFile.data.split(',')[1];
+            const decodedLength = (base64Data.length / 4) * 3;
+            if (decodedLength > MAX_KV_VALUE_SIZE_BYTES) {
+                return new Response('Attached file is too large (max 25MB)', { status: 413 });
+            }
         }
 
         // Validate expirationTtl
@@ -43,10 +54,11 @@ export async function onRequest(context) {
         const key = generateRandomId();
 
         const dataToStore = {
-            content: content,
+            content: content || null, // Allow content to be null if only file is attached
             passwordHash: null,
             createdAt: new Date().toISOString(),
-            burnAfterReading: burnAfterReading || false // Default to false if not provided
+            burnAfterReading: burnAfterReading || false, // Default to false if not provided
+            attachedFile: attachedFile || null // Store attached file data
         };
 
         // If a password is provided, hash it and store the hash
