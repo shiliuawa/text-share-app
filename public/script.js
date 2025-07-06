@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // QRious library for QR code generation
+    // <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+
     try {
         // --- STATE MANAGEMENT ---
         const state = {
@@ -29,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
             shareLinkContainer: document.getElementById('shareLinkContainer'),
             shareUrl: document.getElementById('shareUrl'),
             copyLinkButton: document.getElementById('copyLinkButton'),
+            qrCodeContainer: document.getElementById('qrCodeContainer'),
+            qrCodeCanvas: document.getElementById('qrCodeCanvas'),
 
             // Attachment elements
             attachmentContainer: document.getElementById('attachmentContainer'),
@@ -63,7 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
             darkModeToggle: document.getElementById('darkModeToggle'),
             adminToggleButton: document.getElementById('adminToggleButton'),
             notification: document.getElementById('notification'),
-        };
+            customPathInput: document.getElementById('customPathInput'),
+    };
 
         // --- TRANSLATIONS ---
         const translations = {
@@ -82,9 +88,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 content_empty: '内容不能为空',
                 file_too_large: '文件不能超过 25MB',
                 upload_error: '文件读取失败',
-                upload_file: '上传文件',
-                clear_attachment: '清除附件',
-                enter_password_prompt: '请输入访问密码:',
+                upload_file: 'Upload File',
+            clear_attachment: 'Clear Attachment',
+            custom_link_prefix: 'Custom Link Prefix (optional):',
+            custom_link_placeholder: 'e.g., my-note',
+            enter_password_prompt: 'Please enter the password to view:',
                 wrong_password: '密码错误',
                 content_placeholder: '在这里粘贴或输入文本...',
                 password_placeholder: '为分享链接设置密码 (可选)',
@@ -374,16 +382,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 ia[i] = byteString.charCodeAt(i);
             }
             return new Blob([ab], { type: mimeType });
-        };
+    };
 
-        const createShareLink = async () => {
+    // Helper function to generate a random 6-digit number
+    const generateRandomSixDigitNumber = () => {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+    };
+
+    // A simple (non-cryptographically secure) utility to generate short random strings.
+    function generateRandomId(length = 8) {
+        return Math.random().toString(36).substring(2, 2 + length);
+    }
+
+    const createShareLink = async () => {
             const content = dom.content.value;
             const password = dom.sharePassword.value;
             const burnAfterReading = dom.burnAfterReading.checked;
+            const customPathPrefix = dom.customPathInput.value.trim();
 
             if (!content.trim() && !state.attachedFile) {
                 showNotification(translations[state.lang].content_empty, 'error');
                 return;
+            }
+
+            let finalKey = '';
+            if (customPathPrefix) {
+                // Validate custom path prefix
+                if (!/^[a-zA-Z0-9-]+$/.test(customPathPrefix)) {
+                    showNotification('自定义链接前缀只能包含字母、数字和连字符', 'error');
+                    return;
+                }
+                finalKey = `${customPathPrefix}-${generateRandomSixDigitNumber()}`;
+            } else {
+                finalKey = generateRandomId(); // Use existing random ID generation
             }
 
             dom.loadingIndicator.style.display = 'block';
@@ -431,6 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        key: finalKey, // Send the generated key to backend
                         content,
                         password,
                         expirationTtl,
@@ -444,13 +476,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const { key } = await response.json();
-                dom.shareUrl.value = `${window.location.origin}${window.location.pathname}?id=${key}`;
+                const shareLink = `${window.location.origin}${window.location.pathname}?id=${key}`;
+                dom.shareUrl.value = shareLink;
                 dom.shareLinkContainer.style.display = 'flex';
                 showNotification(translations[state.lang].create_success, 'success');
+
+                // Generate QR code
+                if (dom.qrCodeCanvas) {
+                    new QRious({
+                        element: dom.qrCodeCanvas,
+                        value: shareLink,
+                        size: 150,
+                        level: 'H'
+                    });
+                    dom.qrCodeContainer.style.display = 'block';
+                }
 
                 // Clear content and attachment after successful share
                 dom.content.value = '';
                 clearAttachment();
+                dom.customPathInput.value = ''; // Clear custom path input
 
             } catch (error) {
                 console.error('Error creating share link:', error);
@@ -589,10 +634,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const savedDarkMode = localStorage.getItem('darkMode');
             state.isDarkMode = savedDarkMode !== 'disabled';
             document.body.classList.toggle('dark-mode', state.isDarkMode);
-
-            const savedLang = localStorage.getItem('language') || 'zh';
-            dom.langSelect.value = savedLang;
-            setLanguage(savedLang);
 
             // Setup event listeners
                 setupEventListeners();

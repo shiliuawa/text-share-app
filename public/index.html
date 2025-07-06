@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
     <title data-i18n="main_title">Text Share App</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -61,6 +62,10 @@
                         <input type="checkbox" id="burnAfterReading">
                         <span data-i18n="burn_after_reading">阅后即焚</span>
                     </label>
+                    <div style="margin-top: 10px;">
+                        <label for="customPathInput" data-i18n="custom_link_prefix">自定义链接前缀 (可选):</label>
+                        <input type="text" id="customPathInput" data-i18n-placeholder="custom_link_placeholder" pattern="[a-zA-Z0-9-]+" title="只能包含字母、数字和连字符">
+                    </div>
                 </div>
             </details>
 
@@ -69,6 +74,9 @@
             <div id="shareLinkContainer" style="display: none;">
                 <input id="shareUrl" readonly>
                 <button id="copyLinkButton" data-i18n="copy_link">复制链接</button>
+                <div id="qrCodeContainer" style="margin-top: 10px; text-align: center;">
+                    <canvas id="qrCodeCanvas" style="width: 150px; height: 150px;"></canvas>
+                </div>
             </div>
         </div>
 

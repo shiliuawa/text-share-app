@@ -23,7 +23,7 @@ export async function onRequest(context) {
     }
 
     try {
-        const { content, password, expirationTtl, burnAfterReading, attachedFile } = await request.json();
+        const { key, content, password, expirationTtl, burnAfterReading, attachedFile } = await request.json();
 
         if (!content && !attachedFile) {
             return new Response('Content or attached file cannot be empty', { status: 400 });
@@ -50,8 +50,14 @@ export async function onRequest(context) {
             finalTtl = 2592000;
         }
 
-        // Generate a unique key for this new share
-        const key = generateRandomId();
+        // Use the key provided by the client, or generate a random one if not provided
+        const finalShareKey = key || generateRandomId();
+
+        // Check if the key already exists
+        const existingContent = await kv.get(finalShareKey);
+        if (existingContent !== null) {
+            return new Response('Share key already exists. Please try again.', { status: 409 });
+        }
 
         const dataToStore = {
             content: content || null, // Allow content to be null if only file is attached
@@ -67,10 +73,10 @@ export async function onRequest(context) {
         }
 
         // Store the data in Cloudflare KV with the specified TTL
-        await kv.put(key, JSON.stringify(dataToStore), { expirationTtl: finalTtl });
+        await kv.put(finalShareKey, JSON.stringify(dataToStore), { expirationTtl: finalTtl });
 
         // Return the unique key to the client
-        return new Response(JSON.stringify({ key: key }), {
+        return new Response(JSON.stringify({ key: finalShareKey }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
