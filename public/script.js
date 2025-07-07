@@ -614,6 +614,15 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.createShareButton.addEventListener('click', createShareLink);
             dom.clearAttachmentButton.addEventListener('click', clearAttachment);
             dom.downloadButton.addEventListener('click', downloadContent);
+            dom.copyLinkButton.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(dom.shareUrl.value);
+                    showNotification(translations[state.lang].copy_success, 'success');
+                } catch (err) {
+                    console.error('Failed to copy: ', err);
+                    showNotification(translations[state.lang].copy_error, 'error');
+                }
+            });
             // ... other event listeners
         };
 
