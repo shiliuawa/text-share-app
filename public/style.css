@@ -35,7 +35,7 @@ body.dark-mode {
 
 .container {
     width: 100%;
-    max-width: 800px;
+    max-width: min(800px, 75vw); /* Adjusted for 75% screen width, capped at 800px */
     background: rgba(255, 255, 255, 0.95);
     padding: 30px;
     border-radius: 12px;
