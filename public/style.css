@@ -177,11 +177,22 @@ body.dark-mode #advancedOptions .advanced-options-content {
     border: 1px solid #dee2e6;
 }
 
+body.dark-mode #shareLinkContainer {
+    background-color: var(--dark-mode-container-bg);
+    border: 1px solid var(--dark-mode-border);
+}
+
 #shareUrl {
     flex-grow: 1;
     background-color: #e9ecef;
     border: 1px solid #dee2e6;
     cursor: pointer;
+}
+
+body.dark-mode #shareUrl {
+    background-color: var(--dark-mode-bg);
+    border: 1px solid var(--dark-mode-border);
+    color: var(--dark-mode-text);
 }
 
 .top-controls {
